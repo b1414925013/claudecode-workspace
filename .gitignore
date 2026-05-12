@@ -1,0 +1,7 @@
+.idea
+.venv
+.playwright-mcp
+node_modules
+output
+*/_pycache_/
+*.pyc

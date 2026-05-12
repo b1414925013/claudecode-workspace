@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>$case_id - 测试详情</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+    background: #f0f2f5; color: #1a1a2e; line-height: 1.6;
+  }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 24px 20px 60px; }
+
+  .back-bar {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 24px;
+  }
+  .back-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; background: #fff; border-radius: 8px;
+    text-decoration: none; color: #1a1a2e; font-size: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    transition: box-shadow .2s;
+  }
+  .back-link:hover { box-shadow: 0 4px 16px rgba(0,0,0,.1); }
+
+  .detail-card {
+    background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    overflow: hidden; margin-bottom: 20px;
+  }
+  .detail-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 20px 28px; border-bottom: 1px solid #f0f2f5;
+  }
+  .detail-header h1 { font-size: 20px; flex: 1; }
+
+  .badge { display: inline-block; padding: 2px 12px; border-radius: 99px; font-size: 12px; font-weight: 600; letter-spacing: .3px; }
+  .badge-passed { background: #dcfce7; color: #166534; }
+  .badge-failed { background: #fce4ec; color: #c62828; }
+  .badge-error { background: #fff3e0; color: #e65100; }
+
+  .detail-body { padding: 24px 28px; }
+
+  .meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 12px; margin-bottom: 24px; }
+  .meta-item { background: #f8fafc; border-radius: 8px; padding: 12px 16px; }
+  .meta-label { display: block; font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: .4px; }
+  .meta-value { display: block; font-size: 14px; margin-top: 4px; word-break: break-word; }
+
+  .section { margin-bottom: 20px; }
+  .section h3 { font-size: 14px; font-weight: 600; color: #555; margin-bottom: 12px; text-transform: uppercase; letter-spacing: .4px; }
+
+  .step-list { padding-left: 20px; }
+  .step-list li { margin-bottom: 14px; font-size: 14px; }
+  .step-text { display: block; margin-bottom: 6px; }
+  .shot-link { display: inline-block; border-radius: 6px; overflow: hidden; border: 1px solid #e5e7eb; transition: box-shadow .2s; margin-top: 4px; }
+  .shot-link:hover { box-shadow: 0 4px 16px rgba(0,0,0,.12); }
+  .shot-thumb { display: block; max-width: 320px; max-height: 200px; height: auto; }
+
+  .log-box { background: #1a1a2e; color: #e2e8f0; border-radius: 8px; padding: 16px 20px; font-family: "SF Mono","Fira Code",monospace; font-size: 13px; line-height: 1.7; overflow-x: auto; }
+  .log-line::before { content: "> "; opacity: .5; }
+
+  .error-section pre {
+    background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; border-radius: 8px;
+    padding: 14px 18px; font-size: 13px; overflow-x: auto; white-space: pre-wrap;
+  }
+
+  .empty { color: #999; font-style: italic; }
+
+  footer { text-align: center; padding: 32px 0 16px; font-size: 12px; color: #999; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="back-bar">
+    <a href="../index.html" class="back-link">← 返回总报告</a>
+  </div>
+
+  <div class="detail-card">
+    <div class="detail-header">
+      <span class="badge badge-$status">$status</span>
+      <h1>$case_id</h1>
+    </div>
+    <div class="detail-body">
+      <div class="meta-grid">
+        <div class="meta-item"><span class="meta-label">模块</span><span class="meta-value">$module</span></div>
+        <div class="meta-item"><span class="meta-label">功能点</span><span class="meta-value">$feature</span></div>
+        <div class="meta-item"><span class="meta-label">优先级</span><span class="meta-value">$priority</span></div>
+        <div class="meta-item"><span class="meta-label">前置条件</span><span class="meta-value">$precondition</span></div>
+        <div class="meta-item"><span class="meta-label">预期结果</span><span class="meta-value">$expected</span></div>
+        <div class="meta-item"><span class="meta-label">实际结果</span><span class="meta-value">$actual_result</span></div>
+      </div>
+
+      $steps_html
+      $error_html
+      $log_html
+    </div>
+  </div>
+
+  <footer>Claude Code 自动化测试工具</footer>
+</div>
+</body>
+</html>

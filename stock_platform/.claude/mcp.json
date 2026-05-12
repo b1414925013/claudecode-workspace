@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "description": "Playwright 浏览器自动化 MCP 服务器",
+      "command": "npx.cmd",
+      "args": [
+        "@playwright/mcp"
+      ]
+    }
+  }
+}

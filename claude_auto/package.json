@@ -1,0 +1,13 @@
+{
+  "name": "claude_auto",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Claude Code 自动化测试工具 - Playwright MCP 服务器",
+  "scripts": {
+    "mcp": "@playwright/mcp",
+    "mcp:headless": "@playwright/mcp --headless"
+  },
+  "dependencies": {
+    "@playwright/mcp": "^0.0.73"
+  }
+}

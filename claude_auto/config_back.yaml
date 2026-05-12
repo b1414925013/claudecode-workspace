@@ -1,0 +1,74 @@
+# =============================================================================
+# Claude Code 自动化测试工具 — 配置
+# =============================================================================
+# 启动前请先填写 claude.api_key，其余项可按需调整。
+
+claude:
+  # API 密钥（必填）
+  api_key: "sk-deaf8dea649b40dfa82f9ca9d393f304"
+
+  # API 基础地址
+  #   留空或注释掉 → 使用 Anthropic 官方 API (api.anthropic.com)
+  #   使用 DeepSeek 等第三方接口 → 设为对应兼容地址，例如:
+  #     "https://api.deepseek.com/v1"   （DeepSeek 官方）
+  #     "https://ark.cn-beijing.volces.com/api/v3"  （火山引擎）
+  base_url: "https://api.deepseek.com/anthropic"
+
+  # 模型版本
+  #   使用 Anthropic 官方: "claude-sonnet-4-20250514"
+  #   使用 DeepSeek:       "deepseek-chat"
+  model: "deepseek-v4-flash[1m]"
+
+  # 每次调用的最大 Token 数
+  max_tokens: 8192
+
+  # 生成温度（0.0 ~ 1.0，测试用例生成建议 ≤0.3）
+  temperature: 0.3
+
+# ---------------------------------------------------------------------------
+# 路径
+# ---------------------------------------------------------------------------
+paths:
+  # 文档目录（相对于项目根目录）
+  docs: "test_docs"
+
+  # 测试用例输出目录
+  testcase_output: "output/test_cases"
+
+  # 测试报告输出目录
+  report_output: "output/reports"
+
+  # 日志目录
+  logs: "logs"
+
+# ---------------------------------------------------------------------------
+# 日志
+# ---------------------------------------------------------------------------
+logging:
+  # 是否启用文件日志
+  enabled: true
+
+  # 日志级别: DEBUG / INFO / WARNING / ERROR
+  level: "INFO"
+
+# ---------------------------------------------------------------------------
+# 执行策略
+# ---------------------------------------------------------------------------
+execution:
+  # mode:   auto=生成后立即执行  manual=生成后等待确认再执行
+  mode: "auto"
+  # engine: api=使用 Claude API 模拟执行  playwright=使用 Playwright MCP 驱动真实浏览器
+  engine: "playwright"
+
+# ---------------------------------------------------------------------------
+# Playwright UI 测试
+# ---------------------------------------------------------------------------
+playwright:
+  # 被测应用地址（必填）
+  base_url: "https://www.baidu.com/"
+
+  # 是否无头模式
+  headless: false
+
+  # 截图输出目录
+  screenshot_dir: "output/screenshots"

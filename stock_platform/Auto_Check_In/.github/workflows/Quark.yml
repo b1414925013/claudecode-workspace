@@ -1,0 +1,40 @@
+name: Quark
+
+on:
+  schedule:
+    # 每天 UTC 0点执行，对应北京时间 08:00
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+    inputs:
+      test_mode:
+        description: '测试模式（仅第一个账号）'
+        required: false
+        default: 'false'
+
+jobs:
+  sign-in:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-requests
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run Sign-in
+        env:
+          COOKIE_QUARK: ${{ secrets.COOKIE_QUARK }}
+          WebHook: ${{ secrets.WEBHOOK || secrets.WebHook }}
+        run: python Sign_In.py

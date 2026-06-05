@@ -1,0 +1,10 @@
+{
+  // Claude Code MCP 服务器配置示例
+  // 复制此配置到你的 settings.json 的 mcpServers 部分
+  "mcpServers": {
+    "nebula-mcp-server": {
+      "command": "uv",
+      "args": ["run", "nebula-mcp-server"]
+    }
+  }
+}

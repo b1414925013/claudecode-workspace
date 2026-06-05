@@ -1,0 +1,46 @@
+{
+  "description": "Agent Team 总配置文件 - 管理所有团队和成员",
+  "agents": [
+    {
+      "file": "code_reviewer.json",
+      "category": "代码审查"
+    },
+    {
+      "file": "security_reviewer.json",
+      "category": "代码审查"
+    },
+    {
+      "file": "performance_reviewer.json",
+      "category": "代码审查"
+    },
+    {
+      "file": "planner.json",
+      "category": "架构规划"
+    },
+    {
+      "file": "researcher.json",
+      "category": "代码探索"
+    }
+  ],
+  "teams": [
+    {
+      "file": "code_review_team.json",
+      "pattern": "并行",
+      "use_case": "代码多维度审查"
+    },
+    {
+      "file": "data_pipeline_team.json",
+      "pattern": "顺序",
+      "use_case": "数据处理流程"
+    },
+    {
+      "file": "project_development_team.json",
+      "pattern": "分层",
+      "use_case": "复杂项目开发"
+    }
+  ],
+  "usage_guide": {
+    "single_agent": "直接使用单个 agent 文件中的配置",
+    "team": "参考 team 文件中的 members 列表，按顺序或并行调用多个 agent"
+  }
+}

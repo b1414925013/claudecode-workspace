@@ -1,0 +1,24 @@
+{
+  "name": "code_review_team",
+  "description": "代码审查团队 - 并行执行，多维度审查代码",
+  "mode": "parallel",
+  "members": [
+    {
+      "agent": "code_reviewer",
+      "description": "负责审查代码质量和逻辑"
+    },
+    {
+      "agent": "security_reviewer",
+      "description": "负责审查安全漏洞"
+    },
+    {
+      "agent": "performance_reviewer",
+      "description": "负责审查性能问题"
+    }
+  ],
+  "workflow": {
+    "type": "parallel",
+    "description": "三个审查员同时工作，从不同维度审查代码",
+    "aggregation": "汇总三份审查报告，生成综合报告"
+  }
+}

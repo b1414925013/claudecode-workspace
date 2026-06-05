@@ -1,0 +1,8 @@
+{
+    "playwright": {
+      "command": "npx",
+      "args": ["playwright-mcp", "--headless"],
+      "cwd": "${workspaceFolder}/.claude/mcps/playwright-mcp"
+    }
+  }
+}

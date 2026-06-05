@@ -1,0 +1,18 @@
+[project]
+name = "stock-platform-backend"
+version = "1.0.0"
+description = "股票收益记录平台后端"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi==0.109.0",
+    "uvicorn==0.27.0",
+    "tortoise-orm==0.21.0",
+    "aiomysql==0.2.0",
+    "pydantic==2.5.3",
+    "python-dotenv==1.0.0",
+    "apscheduler==3.10.4",
+    "requests==2.31.0",
+]
+
+[tool.uv]
+dev-dependencies = []

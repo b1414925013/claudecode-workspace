@@ -1,0 +1,6 @@
+先用 web-automation 打开 https://www.wydjg.cn/，
+然后用 api-investigator 开始抓包，
+执行：点击网游单机、免费、下一页，
+停止抓包，把所有 API 保存为 api_log.json，
+并导出 Postman 集合。
+2026-05-19 00:33:10	test

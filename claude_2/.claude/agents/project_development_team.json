@@ -1,0 +1,33 @@
+{
+  "name": "project_development_team",
+  "description": "项目开发团队 - 分层协作，Manager协调多个Worker",
+  "mode": "hierarchical",
+  "members": [
+    {
+      "agent": "manager",
+      "role": "项目经理",
+      "description": "负责协调团队工作，分配任务，汇总结果"
+    },
+    {
+      "agent": "frontend_dev",
+      "role": "前端开发",
+      "description": "负责界面开发和用户交互"
+    },
+    {
+      "agent": "backend_dev",
+      "role": "后端开发",
+      "description": "负责API开发和业务逻辑"
+    },
+    {
+      "agent": "dba",
+      "role": "数据库专家",
+      "description": "负责数据库设计和优化"
+    }
+  ],
+  "workflow": {
+    "type": "hierarchical",
+    "description": "Manager接收任务后，分配给相应的Worker执行，最后汇总结果",
+    "manager_prompt_template": "协调{workers}完成{task}，汇总他们的工作结果",
+    "worker_prompt_template": "你是一个{role}专家，完成：{task}"
+  }
+}

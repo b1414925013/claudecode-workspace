@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "skills": {
+    "minimax-docx": {
+      "source": "modelscope.cn",
+      "sourceType": "well-known",
+      "computedHash": "cb8525153aab8a9eab78a12b26e6eee0707ce2351128b6f11bf6d9a339cf20fd"
+    },
+    "minimax-pdf": {
+      "source": "modelscope.cn",
+      "sourceType": "well-known",
+      "computedHash": "abe99a21c214afee11219027cce39d5522ba08c4bd469ae4002d71dd1b01cf10"
+    },
+    "minimax-xlsx": {
+      "source": "modelscope.cn",
+      "sourceType": "well-known",
+      "computedHash": "c141b0d5e32891df34353191e56ca387d4c418002ca66d59750cd6bc0f26b00e"
+    },
+    "pptx-generator": {
+      "source": "modelscope.cn",
+      "sourceType": "well-known",
+      "computedHash": "956dcd3e9c6d0b4f174f65ae0046dc51217df2436a38aea08a91f75701db6b52"
+    }
+  }
+}

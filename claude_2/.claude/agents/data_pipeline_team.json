@@ -1,0 +1,28 @@
+{
+  "name": "data_pipeline_team",
+  "description": "数据处理管道团队 - 顺序执行，流水线作业",
+  "mode": "sequential",
+  "members": [
+    {
+      "agent": "crawler",
+      "description": "负责从各个数据源爬取原始数据",
+      "tools": ["web_fetch", "bash"]
+    },
+    {
+      "agent": "cleaner",
+      "description": "负责清洗和格式化数据",
+      "tools": ["bash"]
+    },
+    {
+      "agent": "storage",
+      "description": "负责将数据存入数据库",
+      "tools": ["bash"]
+    }
+  ],
+  "workflow": {
+    "type": "sequential",
+    "description": "流水线作业：爬取 → 清洗 → 存储",
+    "input": "原始数据源列表",
+    "output": "清洗后存入数据库的数据"
+  }
+}

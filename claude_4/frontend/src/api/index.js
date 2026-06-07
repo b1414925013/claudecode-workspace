@@ -14,7 +14,7 @@ export default {
   getLyrics(songId, platform) {
     return api.get(`/lyrics/${songId}`, { params: { platform } })
   },
-  getRankings(platform = 'netease', type = 'hot') {
-    return api.get('/rankings', { params: { platform, type } })
+  getRankings(platform = 'netease', ranking_type = 'hot') {
+    return api.get('/rankings', { params: { platform, ranking_type } })
   }
 }

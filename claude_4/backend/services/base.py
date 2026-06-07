@@ -17,5 +17,9 @@ class BaseMusicService(ABC):
     async def get_lyrics(self, song_id: str):
         pass
 
+    @abstractmethod
+    async def get_rankings(self, ranking_type: str = "hot"):
+        pass
+
     async def close(self):
         await self.client.aclose()

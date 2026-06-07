@@ -16,14 +16,15 @@ class QQMusicService(BaseMusicService):
 
         songs = []
         for item in data.get("data", {}).get("song", {}).get("list", []):
+            singer = item.get("singer") or []
             songs.append(Song(
-                id=str(item["songmid"]),
-                name=item["songname"],
-                artist=item["singer"][0]["name"] if item["singer"] else "",
-                album=item["albumname"],
-                duration=item["interval"],
+                id=str(item.get("songmid", "")),
+                name=item.get("songname", ""),
+                artist=singer[0].get("name", "") if singer else "",
+                album=item.get("albumname", ""),
+                duration=item.get("interval", 0),
                 platform=Platform.QQ,
-                cover_url=f"https://y.gtimg.cn/music/photo_new/T002R300x300M000{item['albummid']}.jpg"
+                cover_url=f"https://y.gtimg.cn/music/photo_new/T002R300x300M000{item.get('albummid', '')}.jpg"
             ))
         return songs
 
@@ -57,3 +58,25 @@ class QQMusicService(BaseMusicService):
         response = await self.client.get(url, params=params, headers=headers)
         data = response.json()
         return data.get("lyric", "")
+
+    async def get_rankings(self, ranking_type: str = "hot"):
+        # QQ音乐热歌榜
+        url = "https://c.y.qq.com/v8/fcg-bin/fcg_myqq_toplist.fcg"
+        params = {"format": "json", "topid": 26}  # 热歌榜
+        headers = {"Referer": "https://y.qq.com"}
+        response = await self.client.get(url, params=params, headers=headers)
+        data = response.json()
+        songs = []
+        for item in data.get("songlist", [])[:20]:
+            s = item.get("data", {})
+            singer = s.get("singer") or []
+            songs.append(Song(
+                id=str(s.get("songmid", "")),
+                name=s.get("songname", ""),
+                artist=singer[0].get("name", "") if singer else "",
+                album=s.get("albumname", ""),
+                duration=s.get("interval", 0),
+                platform=Platform.QQ,
+                cover_url=f"https://y.gtimg.cn/music/photo_new/T002R300x300M000{s.get('albummid', '')}.jpg"
+            ))
+        return songs

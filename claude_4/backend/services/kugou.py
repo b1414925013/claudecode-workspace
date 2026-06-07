@@ -16,13 +16,13 @@ class KugouService(BaseMusicService):
         songs = []
         for item in data.get("data", {}).get("info", []):
             songs.append(Song(
-                id=str(item["hash"]),
-                name=item["songname"],
-                artist=item["singername"],
-                album=item["album_name"] or "",
-                duration=item["duration"],
+                id=str(item.get("hash", "")),
+                name=item.get("songname", ""),
+                artist=item.get("singername", ""),
+                album=item.get("album_name", ""),
+                duration=item.get("duration", 0),
                 platform=Platform.KUGOU,
-                cover_url=item.get("imgurl", "").replace("{size}", "400")
+                cover_url=item.get("imgurl", "").replace("{size}", "400") if item.get("imgurl") else ""
             ))
         return songs
 
@@ -41,3 +41,22 @@ class KugouService(BaseMusicService):
         }
         response = await self.client.get(url, params=params)
         return ""
+
+    async def get_rankings(self, ranking_type: str = "hot"):
+        # 酷狗热歌榜
+        url = "http://mobilecdn.kugou.com/api/v3/rank/hot"
+        params = {"page": 1, "pagesize": 20}
+        response = await self.client.get(url, params=params)
+        data = response.json()
+        songs = []
+        for item in data.get("data", {}).get("info", []):
+            songs.append(Song(
+                id=str(item.get("hash", "")),
+                name=item.get("songname", ""),
+                artist=item.get("singername", ""),
+                album=item.get("album_name", ""),
+                duration=item.get("duration", 0),
+                platform=Platform.KUGOU,
+                cover_url=item.get("imgurl", "").replace("{size}", "400") if item.get("imgurl") else ""
+            ))
+        return songs

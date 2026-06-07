@@ -37,17 +37,25 @@ const search = () => {
 </script>
 
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Segoe UI', sans-serif; background: #f5f7fa; }
+@import './assets/styles.css';
 .app { min-height: 100vh; display: flex; flex-direction: column; }
-.header { background: #1E88E5; color: white; padding: 16px 24px; display: flex; align-items: center; gap: 24px; }
+.header { background: var(--primary); color: white; padding: 16px 24px; display: flex; align-items: center; gap: 24px; position: sticky; top: 0; z-index: 50; }
 .logo { font-size: 20px; font-weight: bold; }
 .search-box { flex: 1; max-width: 500px; display: flex; }
-.search-box input { flex: 1; padding: 8px 16px; border: none; border-radius: 4px 0 0 4px; }
-.search-box button { padding: 8px 24px; background: #1565C0; color: white; border: none; border-radius: 0 4px 4px 0; cursor: pointer; }
+.search-box input { flex: 1; padding: 8px 16px; border: none; border-radius: 4px 0 0 4px; outline: none; }
+.search-box button { padding: 8px 24px; background: var(--primary-dark); color: white; border: none; border-radius: 0 4px 4px 0; cursor: pointer; }
+.search-box button:hover { opacity: 0.9; }
 .main { display: flex; flex: 1; }
-.sidebar { width: 200px; background: white; padding: 24px 0; }
-.sidebar a { display: block; padding: 12px 24px; color: #333; text-decoration: none; }
-.sidebar a:hover, .sidebar a.router-link-active { background: #E3F2FD; color: #1E88E5; }
-.content { flex: 1; padding: 24px; }
+.sidebar { width: 200px; background: white; padding: 24px 0; border-right: 1px solid var(--border); min-height: calc(100vh - 60px); }
+.sidebar a { display: block; padding: 12px 24px; color: var(--text); text-decoration: none; transition: all 0.2s; }
+.sidebar a:hover { background: var(--primary-light); color: var(--primary); }
+.sidebar a.router-link-active { background: var(--primary-light); color: var(--primary); font-weight: 500; border-right: 3px solid var(--primary); }
+.content { flex: 1; padding: 24px; margin-bottom: 80px; }
+
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .header { flex-wrap: wrap; gap: 12px; }
+  .search-box { order: 3; width: 100%; max-width: 100%; }
+  .content { padding: 16px; }
+}
 </style>

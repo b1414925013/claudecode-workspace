@@ -1,0 +1,19 @@
+/* 全局样式 */
+:root {
+  --primary: #1E88E5;
+  --primary-dark: #1565C0;
+  --primary-light: #E3F2FD;
+  --bg: #f5f7fa;
+  --white: #ffffff;
+  --text: #333333;
+  --text-light: #666666;
+  --border: #e0e0e0;
+  --radius: 8px;
+  --shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+button { font-family: inherit; cursor: pointer; }
+a { color: var(--primary); text-decoration: none; }
+a:hover { text-decoration: underline; }

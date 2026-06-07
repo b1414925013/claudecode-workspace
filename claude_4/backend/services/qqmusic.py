@@ -3,13 +3,57 @@ from models import Song, Platform
 
 class QQMusicService(BaseMusicService):
     async def search(self, keyword: str, page: int = 1, limit: int = 20):
-        # TODO: 实现QQ音乐搜索
-        return []
+        url = "https://c.y.qq.com/soso/fcgi-bin/client_search_cp"
+        params = {
+            "w": keyword,
+            "p": page,
+            "n": limit,
+            "format": "json"
+        }
+        headers = {"Referer": "https://y.qq.com"}
+        response = await self.client.get(url, params=params, headers=headers)
+        data = response.json()
+
+        songs = []
+        for item in data.get("data", {}).get("song", {}).get("list", []):
+            songs.append(Song(
+                id=str(item["songmid"]),
+                name=item["songname"],
+                artist=item["singer"][0]["name"] if item["singer"] else "",
+                album=item["albumname"],
+                duration=item["interval"],
+                platform=Platform.QQ,
+                cover_url=f"https://y.gtimg.cn/music/photo_new/T002R300x300M000{item['albummid']}.jpg"
+            ))
+        return songs
 
     async def get_play_url(self, song_id: str):
-        # TODO: 实现获取播放链接
-        return None
+        # 使用QQ音乐v1获取播放链接
+        url = f"https://u.y.qq.com/cgi-bin/musicu.fcg"
+        data = {
+            "req_1": {
+                "module": "vkey.GetVkeyList",
+                "method": "GetVkey",
+                "param": {
+                    "songmid": [song_id],
+                    "songtype": [0]
+                }
+            }
+        }
+        response = await self.client.post(url, json=data)
+        result = response.json()
+        purl = result.get("req_1", {}).get("data", {}).get("midurlinfo", [])
+        if purl:
+            return "https://isure.stream.qqmusic.qq.com/" + purl[0]["purl"]
+        return ""
 
     async def get_lyrics(self, song_id: str):
-        # TODO: 实现获取歌词
-        return None
+        url = f"https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg"
+        params = {
+            "songmid": song_id,
+            "format": "json"
+        }
+        headers = {"Referer": "https://y.qq.com"}
+        response = await self.client.get(url, params=params, headers=headers)
+        data = response.json()
+        return data.get("lyric", "")

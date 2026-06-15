@@ -5,7 +5,7 @@ description = "Add your description here"
 requires-python = ">=3.11"
 dependencies = [
     "mcp>=1.27.2",
+    "nebula3-python>=3.8.3",
     "pdfplumber>=0.11.9",
-    "pypdf2>=3.0.1"
-
+    "pypdf2>=3.0.1",
 ]

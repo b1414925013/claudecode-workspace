@@ -1,6 +1,6 @@
 <template>
   <Transition name="overlay">
-    <div v-if="status !== 'playing'" class="overlay" @click.self="$emit('newGame')">
+    <div v-if="status !== 'playing'" class="overlay">
       <div class="overlay-content">
         <h2 class="overlay-title" v-if="status === 'won'">🎉 恭喜你赢了！</h2>
         <h2 class="overlay-title lose" v-else>😞 游戏结束</h2>

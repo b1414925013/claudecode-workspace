@@ -44,6 +44,9 @@ export function useGameState() {
       state.status = 'playing'
       state.history = []
       state.bestScore = storage.loadBestScore()
+      // Reset tile ID counter to avoid Vue key collisions with restored tiles
+      const maxId = Math.max(...state.tiles.map(t => t.id), 0)
+      logic.resetIdCounter(maxId)
     } else {
       initGame(4)
     }

@@ -1,0 +1,7 @@
+Task 1: complete (commits c20e274..0d0ea1f, review clean)
+Task 2: complete (commits 0d0ea1f..12e2a2b, review clean)
+Task 3: complete (commits 12e2a2b..419fa97)
+Task 4: complete (commits 419fa97..2490c26)
+Task 5: complete (2490c26..3c72340)
+Tasks 6-11: complete (3c72340..28ae581)
+Task 12: verified (play test via browser)

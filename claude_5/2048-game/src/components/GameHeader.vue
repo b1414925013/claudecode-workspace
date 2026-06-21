@@ -77,6 +77,13 @@ defineEmits<{
 .score-value {
   font-size: 1.5rem;
   font-weight: 700;
+  animation: score-bump 150ms ease;
+}
+
+@keyframes score-bump {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.15); }
+  100% { transform: scale(1); }
 }
 
 .header-bottom {

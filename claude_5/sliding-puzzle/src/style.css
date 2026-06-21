@@ -1,12 +1,101 @@
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* ========== CSS Variables & Theme ========== */
+:root {
+  --board-bg: #bbada0;
+  --cell-bg: rgba(238, 228, 218, 0.35);
+  --page-bg: #faf8ef;
+  --text-color: #776e65;
+  --score-bg: #bbada0;
+  --btn-bg: #8f7a66;
+  --btn-hover: #9f8b78;
+  --overlay-bg: rgba(238, 228, 218, 0.73);
+  --radius: 6px;
+  --max-width: 500px;
+}
+
+.dark {
+  --board-bg: #3c3a3d;
+  --cell-bg: rgba(255, 255, 255, 0.1);
+  --page-bg: #1a1a2e;
+  --text-color: #e0e0e0;
+  --score-bg: #3c3a3d;
+  --btn-bg: #5c5a5d;
+  --btn-hover: #6c6a6d;
+  --overlay-bg: rgba(26, 26, 46, 0.85);
+}
+
+/* ========== Reset ========== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 html, body { height: 100%; }
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #faf8ef;
-  color: #776e65;
+  background: var(--page-bg);
+  color: var(--text-color);
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
+
 #app {
   min-height: 100%;
-  display: flex; justify-content: center; align-items: flex-start;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
   padding: 20px 16px 40px;
 }
+
+/* ========== Tile Colors (Number Mode) ========== */
+.tile-1  { background: #eee4da; color: #776e65; }
+.tile-2  { background: #ede0c8; color: #776e65; }
+.tile-3  { background: #f2b179; color: #f9f6f2; }
+.tile-4  { background: #f59563; color: #f9f6f2; }
+.tile-5  { background: #f67c5f; color: #f9f6f2; }
+.tile-6  { background: #f65e3b; color: #f9f6f2; }
+.tile-7  { background: #edcf72; color: #f9f6f2; }
+.tile-8  { background: #edcc61; color: #f9f6f2; }
+.tile-9  { background: #edc850; color: #f9f6f2; }
+.tile-10 { background: #edc53f; color: #f9f6f2; }
+.tile-11,
+.tile-12,
+.tile-13,
+.tile-14,
+.tile-15,
+.tile-16,
+.tile-17,
+.tile-18,
+.tile-19,
+.tile-20,
+.tile-21,
+.tile-22,
+.tile-23,
+.tile-24 { background: #edc22e; color: #f9f6f2; }
+
+.dark .tile-1  { background: #4a4a4a; color: #e0e0e0; }
+.dark .tile-2  { background: #5a4a3a; color: #e0e0e0; }
+.dark .tile-3  { background: #8a5a3a; color: #e0e0e0; }
+.dark .tile-4  { background: #9a4a2a; color: #e0e0e0; }
+.dark .tile-5  { background: #aa3a2a; color: #e0e0e0; }
+.dark .tile-6  { background: #ba2a1a; color: #e0e0e0; }
+.dark .tile-7  { background: #8a7a2a; color: #e0e0e0; }
+.dark .tile-8  { background: #9a8a2a; color: #e0e0e0; }
+.dark .tile-9  { background: #aa9a2a; color: #e0e0e0; }
+.dark .tile-10 { background: #baaa2a; color: #e0e0e0; }
+.dark .tile-11,
+.dark .tile-12,
+.dark .tile-13,
+.dark .tile-14,
+.dark .tile-15,
+.dark .tile-16,
+.dark .tile-17,
+.dark .tile-18,
+.dark .tile-19,
+.dark .tile-20,
+.dark .tile-21,
+.dark .tile-22,
+.dark .tile-23,
+.dark .tile-24 { background: #5a5a5a; color: #e0e0e0; }

@@ -1,0 +1,17 @@
+[Unit]
+Description=KSM Toolbox Service
+After=network.target mysql.service
+Wants=mysql.service
+
+[Service]
+Type=simple
+User=ksm
+WorkingDirectory=/opt/k8s-secret-manager
+EnvironmentFile=/opt/k8s-secret-manager/.env
+ExecStart=/opt/k8s-secret-manager/.venv/bin/uv run --package ksm-toolbox uvicorn ksm_toolbox.main:app --host 0.0.0.0 --port 8004
+Restart=always
+RestartSec=5
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

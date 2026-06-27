@@ -1,0 +1,102 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ksm_secret_manager
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: packages/auth-service/Dockerfile
+    environment:
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: ksm_secret_manager
+      SERVICE_NAME: auth-service
+      JWT_SECRET: ${JWT_SECRET:-change-this-in-production}
+    ports:
+      - "8001:8001"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  env-service:
+    build:
+      context: .
+      dockerfile: packages/env-service/Dockerfile
+    environment:
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: ksm_secret_manager
+      JWT_SECRET: ${JWT_SECRET:-change-this-in-production}
+    ports:
+      - "8002:8002"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  secret-service:
+    build:
+      context: .
+      dockerfile: packages/secret-service/Dockerfile
+    environment:
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: ksm_secret_manager
+      JWT_SECRET: ${JWT_SECRET:-change-this-in-production}
+    ports:
+      - "8003:8003"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  toolbox-service:
+    build:
+      context: .
+      dockerfile: packages/toolbox-service/Dockerfile
+    environment:
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: ksm_secret_manager
+      JWT_SECRET: ${JWT_SECRET:-change-this-in-production}
+    ports:
+      - "8004:8004"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: packages/api-gateway/Dockerfile
+    environment:
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: ksm_secret_manager
+      SERVICE_NAME: api-gateway
+      JWT_SECRET: ${JWT_SECRET:-change-this-in-production}
+    ports:
+      - "8000:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+volumes:
+  mysql_data:

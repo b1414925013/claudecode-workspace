@@ -1,0 +1,319 @@
+# ============================================
+# Auth Service
+# ============================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  namespace: ksm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      containers:
+        - name: auth-service
+          image: ksm-auth:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: ksm-config
+                  key: DB_HOST
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: ksm-config
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ksm-config
+                  key: DB_PASSWORD
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: ksm-config
+                  key: DB_NAME
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: ksm-config
+                  key: JWT_SECRET
+            - name: SERVICE_NAME
+              value: auth-service
+          ports:
+            - containerPort: 8001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+  namespace: ksm
+spec:
+  selector:
+    app: auth-service
+  ports:
+    - port: 8001
+      targetPort: 8001
+---
+# ============================================
+# Env Service
+# ============================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: env-service
+  namespace: ksm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: env-service
+  template:
+    metadata:
+      labels:
+        app: env-service
+    spec:
+      containers:
+        - name: env-service
+          image: ksm-env:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: ksm-config
+                  key: DB_HOST
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: ksm-config
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ksm-config
+                  key: DB_PASSWORD
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: ksm-config
+                  key: DB_NAME
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: ksm-config
+                  key: JWT_SECRET
+          ports:
+            - containerPort: 8002
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: env-service
+  namespace: ksm
+spec:
+  selector:
+    app: env-service
+  ports:
+    - port: 8002
+      targetPort: 8002
+---
+# ============================================
+# Secret Service
+# ============================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: secret-service
+  namespace: ksm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: secret-service
+  template:
+    metadata:
+      labels:
+        app: secret-service
+    spec:
+      containers:
+        - name: secret-service
+          image: ksm-secret:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: ksm-config
+                  key: DB_HOST
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: ksm-config
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ksm-config
+                  key: DB_PASSWORD
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: ksm-config
+                  key: DB_NAME
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: ksm-config
+                  key: JWT_SECRET
+          ports:
+            - containerPort: 8003
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: secret-service
+  namespace: ksm
+spec:
+  selector:
+    app: secret-service
+  ports:
+    - port: 8003
+      targetPort: 8003
+---
+# ============================================
+# Toolbox Service
+# ============================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: toolbox-service
+  namespace: ksm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: toolbox-service
+  template:
+    metadata:
+      labels:
+        app: toolbox-service
+    spec:
+      containers:
+        - name: toolbox-service
+          image: ksm-toolbox:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: ksm-config
+                  key: DB_HOST
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: ksm-config
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ksm-config
+                  key: DB_PASSWORD
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: ksm-config
+                  key: DB_NAME
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: ksm-config
+                  key: JWT_SECRET
+          ports:
+            - containerPort: 8004
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: toolbox-service
+  namespace: ksm
+spec:
+  selector:
+    app: toolbox-service
+  ports:
+    - port: 8004
+      targetPort: 8004
+---
+# ============================================
+# API Gateway
+# ============================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: ksm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+        - name: api-gateway
+          image: ksm-gateway:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: ksm-config
+                  key: DB_HOST
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: ksm-config
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ksm-config
+                  key: DB_PASSWORD
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: ksm-config
+                  key: DB_NAME
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: ksm-config
+                  key: JWT_SECRET
+            - name: SERVICE_NAME
+              value: api-gateway
+          ports:
+            - containerPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  namespace: ksm
+spec:
+  selector:
+    app: api-gateway
+  ports:
+    - port: 8000
+      targetPort: 8000
+  type: NodePort

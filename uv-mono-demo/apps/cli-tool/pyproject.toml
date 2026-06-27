@@ -1,0 +1,15 @@
+[project]
+name = "cli-tool"
+version = "0.1.0"
+description = "CLI 入口应用 — 依赖 service-b (间接依赖全部子项目)"
+requires-python = ">=3.10"
+packages = [{ include = "cli_tool", from = "src" }]
+
+dependencies = ["service-b"]
+
+[tool.uv.sources]
+service-b = { workspace = true }
+
+[build-system]
+requires = ["uv_build>=0.11.0,<0.12"]
+build-backend = "uv_build"

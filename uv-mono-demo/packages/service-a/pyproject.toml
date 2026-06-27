@@ -1,0 +1,15 @@
+[project]
+name = "service-a"
+version = "0.1.0"
+description = "业务项目 A — 依赖 core 实现业务逻辑"
+requires-python = ">=3.10"
+packages = [{ include = "service_a", from = "src" }]
+
+dependencies = ["core"]
+
+[tool.uv.sources]
+core = { workspace = true }
+
+[build-system]
+requires = ["uv_build>=0.11.0,<0.12"]
+build-backend = "uv_build"

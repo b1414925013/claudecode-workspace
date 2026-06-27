@@ -1,0 +1,13 @@
+[project]
+name = "ksm-gateway"
+version = "0.1.0"
+description = "K8s Secret Manager — API Gateway"
+requires-python = ">=3.12"
+dependencies = [
+    "ksm-core",
+    "httpx>=0.28.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

@@ -1,0 +1,19 @@
+[project]
+name = "k8s-secret-manager-workspace"
+version = "0.1.0"
+description = "K8s 多环境运维管理后台 — UV Workspace Monorepo"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.uv.workspace]
+members = [
+    "packages/*",
+]
+
+[tool.uv.sources]
+ksm-core = { workspace = true }
+ksm-auth = { workspace = true }
+ksm-env = { workspace = true }
+ksm-secret = { workspace = true }
+ksm-toolbox = { workspace = true }
+ksm-gateway = { workspace = true }

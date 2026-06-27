@@ -1,0 +1,12 @@
+[project]
+name = "ksm-env"
+version = "0.1.0"
+description = "K8s Secret Manager — Environment Service"
+requires-python = ">=3.12"
+dependencies = [
+    "ksm-core",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

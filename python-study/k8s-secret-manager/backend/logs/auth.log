@@ -1,0 +1,17 @@
+INFO:     Started server process [15700]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     127.0.0.1:60888 - "GET /health HTTP/1.1" 200 OK
+(trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "D:\develop\claudecode-workspace\python-study\k8s-secret-manager\.venv\Lib\site-packages\passlib\handlers\bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+INFO:     127.0.0.1:60958 - "POST /api/v1/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60960 - "GET /api/v1/auth/profile HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60961 - "GET /api/v1/auth/users HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61175 - "POST /api/v1/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61176 - "GET /api/v1/auth/profile HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61177 - "GET /api/v1/auth/users HTTP/1.1" 200 OK

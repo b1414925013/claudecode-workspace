@@ -44,7 +44,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import request from '@/api/request'
+import { gatewayReq } from '@/api/request'
 
 const loading = ref(false)
 const list = ref<any[]>([])
@@ -55,7 +55,7 @@ const query = reactive({ action: '', username: '', resource_type: '' })
 async function fetchList() {
   loading.value = true
   try {
-    const res: any = await request.get('/audit-logs', { params: { ...query, page: page.value, size: 20 } })
+    const res: any = await gatewayReq.get('/audit-logs', { params: { ...query, page: page.value, size: 20 } })
     list.value = res.data.items
     total.value = res.data.total
   } catch {} finally { loading.value = false }
@@ -63,7 +63,7 @@ async function fetchList() {
 
 async function handleExport() {
   try {
-    const res = await request.get('/audit-logs/export', { params: query, responseType: 'blob' })
+    const res = await gatewayReq.get('/audit-logs/export', { params: query, responseType: 'blob' })
     const url = window.URL.createObjectURL(new Blob([res]))
     const a = document.createElement('a')
     a.href = url

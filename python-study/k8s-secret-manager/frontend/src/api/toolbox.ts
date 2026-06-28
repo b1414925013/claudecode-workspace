@@ -1,13 +1,13 @@
-import request from './request'
+import { gatewayReq } from './request'
 
 export function getAuditLogs(params?: any) {
-  return request.get('/audit-logs', { params })
+  return gatewayReq.get('/audit-logs', { params })
 }
 
 export function exportAuditLogs(params?: any) {
-  return request.get('/audit-logs/export', { params, responseType: 'blob' })
+  return gatewayReq.get('/audit-logs/export', { params, responseType: 'blob' })
 }
 
 export function getDashboardStats() {
-  return request.get('/dashboard/stats')
+  return gatewayReq.get('/dashboard/stats')
 }

@@ -1,41 +1,41 @@
-import request from './request'
+import { secretReq } from './request'
 
 export function listSecrets(params: { env_id: number; namespace: string }) {
-  return request.get('/secrets/list', { params })
+  return secretReq.get('/secrets/list', { params })
 }
 
 export function getSecretDetail(params: { env_id: number; namespace: string; secret_name: string; key: string }) {
-  return request.get('/secrets/detail', { params })
+  return secretReq.get('/secrets/detail', { params })
 }
 
 export function syncSecrets(data: any) {
-  return request.post('/secrets/sync', data)
+  return secretReq.post('/secrets/sync', data)
 }
 
 export function listCredentials(params?: any) {
-  return request.get('/credentials', { params })
+  return secretReq.get('/credentials', { params })
 }
 
 export function createCredential(data: any) {
-  return request.post('/credentials', data)
+  return secretReq.post('/credentials', data)
 }
 
 export function getCredential(id: number) {
-  return request.get(`/credentials/${id}`)
+  return secretReq.get(`/credentials/${id}`)
 }
 
 export function updateCredential(id: number, data: any) {
-  return request.put(`/credentials/${id}`, data)
+  return secretReq.put(`/credentials/${id}`, data)
 }
 
 export function deleteCredential(id: number) {
-  return request.delete(`/credentials/${id}`)
+  return secretReq.delete(`/credentials/${id}`)
 }
 
 export function revealCredential(id: number) {
-  return request.post(`/credentials/${id}/reveal`)
+  return secretReq.post(`/credentials/${id}/reveal`)
 }
 
 export function exportCredentials(params?: any) {
-  return request.post('/credentials/export', params)
+  return secretReq.post('/credentials/export', params)
 }

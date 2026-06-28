@@ -88,7 +88,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import request from '@/api/request'
+import { toolboxReq } from '@/api/request'
 import { ElMessage } from 'element-plus'
 
 const auth = useAuthStore()
@@ -134,60 +134,60 @@ const linkForm = ref({ title: '', url: '', category: 'docs' })
 
 async function formatJson() {
   try {
-    const res: any = await request.post('/tools/json-format', { input: jsonInput.value, indent: jsonIndent.value })
+    const res: any = await toolboxReq.post('/tools/json-format', { input: jsonInput.value, indent: jsonIndent.value })
     jsonOutput.value = res.data.output
   } catch {}
 }
 
 async function b64Encode() {
-  const res: any = await request.post('/tools/base64-encode', { input: b64Input.value })
+  const res: any = await toolboxReq.post('/tools/base64-encode', { input: b64Input.value })
   b64Output.value = res.data.output
 }
 async function b64Decode() {
-  const res: any = await request.post('/tools/base64-decode', { input: b64Input.value })
+  const res: any = await toolboxReq.post('/tools/base64-decode', { input: b64Input.value })
   b64Output.value = res.data.output
 }
 
 async function urlEncode() {
-  const res: any = await request.post('/tools/url-encode', { input: urlInput.value })
+  const res: any = await toolboxReq.post('/tools/url-encode', { input: urlInput.value })
   urlOutput.value = res.data.output
 }
 async function urlDecode() {
-  const res: any = await request.post('/tools/url-decode', { input: urlInput.value })
+  const res: any = await toolboxReq.post('/tools/url-decode', { input: urlInput.value })
   urlOutput.value = res.data.output
 }
 
 async function convertTs() {
-  const res: any = await request.post('/tools/timestamp', { value: tsInput.value })
+  const res: any = await toolboxReq.post('/tools/timestamp', { value: tsInput.value })
   tsOutput.value = JSON.stringify(res.data, null, 2)
 }
 
 async function genUuid() {
-  const res: any = await request.get('/tools/uuid', { params: { count: uuidCount.value } })
+  const res: any = await toolboxReq.get('/tools/uuid', { params: { count: uuidCount.value } })
   uuidOutput.value = res.data.uuids.join('\n')
 }
 
 async function testRegex() {
-  const res: any = await request.post('/tools/regex-test', { pattern: regexPattern.value, text: regexText.value, flags: '' })
+  const res: any = await toolboxReq.post('/tools/regex-test', { pattern: regexPattern.value, text: regexText.value, flags: '' })
   regexOutput.value = JSON.stringify(res.data, null, 2)
 }
 
 async function checkPort() {
-  const res: any = await request.post('/tools/port-check', { host: portHost.value, port: portNum.value, timeout: 3 })
+  const res: any = await toolboxReq.post('/tools/port-check', { host: portHost.value, port: portNum.value, timeout: 3 })
   portResult.value = res.data.open
 }
 
 function openLink(url: string) { window.open(url, '_blank') }
 
 async function saveLink() {
-  await request.post('/links', linkForm.value)
+  await toolboxReq.post('/links', linkForm.value)
   ElMessage.success('链接已添加')
   showLinkDialog.value = false
   fetchLinks()
 }
 
 async function fetchLinks() {
-  const res: any = await request.get('/links')
+  const res: any = await toolboxReq.get('/links')
   links.value = res.data.items
 }
 

@@ -1,9 +1,9 @@
-import request from './request'
+import { authReq } from './request'
 
 export function login(data: { username: string; password: string }) {
-  return request.post('/auth/login', data)
+  return authReq.post('/login', data)
 }
 
 export function getProfile() {
-  return request.get('/auth/profile')
+  return authReq.get('/profile')
 }

@@ -84,7 +84,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import request from '@/api/request'
+import { authReq } from '@/api/request'
 import { getEnvironments } from '@/api/environment'
 import { ElMessage } from 'element-plus'
 
@@ -112,7 +112,7 @@ const currentUserId = ref(0)
 async function fetchList() {
   loading.value = true
   try {
-    const res: any = await request.get('/users', { params: query })
+    const res: any = await authReq.get('/users', { params: query })
     list.value = res.data.items
     total.value = res.data.total
   } catch {} finally { loading.value = false }
@@ -139,9 +139,9 @@ async function handleSave() {
   try {
     if (isEdit.value) {
       const id = list.value.find(i => i.username === form.username)?.id
-      if (id) await request.put(`/users/${id}`, { nickname: form.nickname, email: form.email, role: form.role })
+      if (id) await authReq.put(`/users/${id}`, { nickname: form.nickname, email: form.email, role: form.role })
     } else {
-      await request.post('/users', form)
+      await authReq.post('/users', form)
     }
     ElMessage.success(isEdit.value ? '更新成功' : '创建成功')
     dialogVisible.value = false
@@ -150,7 +150,7 @@ async function handleSave() {
 }
 
 async function handleDelete(id: number) {
-  try { await request.delete(`/users/${id}`); ElMessage.success('已删除'); fetchList() } catch {}
+  try { await authReq.delete(`/users/${id}`); ElMessage.success('已删除'); fetchList() } catch {}
 }
 
 function openResetPwd(row: any) {
@@ -163,7 +163,7 @@ async function handleResetPwd() {
   const valid = await pwdFormRef.value?.validate().catch(() => false)
   if (!valid) return
   try {
-    await request.put(`/users/${pwdForm.user_id}/reset-password`, { new_password: pwdForm.new_password })
+    await authReq.put(`/users/${pwdForm.user_id}/reset-password`, { new_password: pwdForm.new_password })
     ElMessage.success('密码已重置')
     pwdVisible.value = false
   } catch {}
@@ -171,13 +171,13 @@ async function handleResetPwd() {
 
 async function openEnvPerm(row: any) {
   currentUserId.value = row.id
-  const res: any = await request.get(`/users/${row.id}/env-permissions`)
+  const res: any = await authReq.get(`/users/${row.id}/env-permissions`)
   selectedEnvs.value = res.data.env_ids
   envPermVisible.value = true
 }
 
 async function saveEnvPerm() {
-  await request.put(`/users/${currentUserId.value}/env-permissions`, { env_ids: selectedEnvs.value })
+  await authReq.put(`/users/${currentUserId.value}/env-permissions`, { env_ids: selectedEnvs.value })
   ElMessage.success('权限已更新')
   envPermVisible.value = false
 }

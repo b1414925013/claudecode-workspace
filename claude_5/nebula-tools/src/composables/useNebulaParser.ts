@@ -1,8 +1,8 @@
-import { ref, watch, shallowRef } from 'vue'
+import { ref, watch, shallowRef, type Ref } from 'vue'
 import { parseNGql, generateColorMap } from '../parser/nGqlParser'
 import type { ParsedGraph, TagColor } from '../types/nebula'
 
-export function useNebulaParser(input: { value: string }) {
+export function useNebulaParser(input: Ref<string>) {
   const parsed = shallowRef<ParsedGraph>({ tags: [], edgeTypes: [], vertices: [], edges: [] })
   const tagColors = ref<TagColor[]>([])
   const edgeColors = ref<TagColor[]>([])
@@ -11,7 +11,7 @@ export function useNebulaParser(input: { value: string }) {
 
   let timer: ReturnType<typeof setTimeout> | null = null
 
-  watch(() => input.value, (val) => {
+  watch(input, (val) => {
     if (timer) clearTimeout(timer)
     timer = setTimeout(() => {
       try {

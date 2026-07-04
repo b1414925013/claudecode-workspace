@@ -15,7 +15,7 @@ const nGqlLang = StreamLanguage.define({
     if (stream.match(/^'([^']*)'/)) return 'string'
     if (stream.match(/^\d+(\.\d+)?/)) return 'number'
     if (stream.match(/^--.*/)) return 'comment'
-    if (stream.match(/^->/)) return 'arrow'
+    if (stream.match(/^->/)) return 'operator'
     stream.next()
     return null
   },

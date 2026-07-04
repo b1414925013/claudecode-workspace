@@ -26,7 +26,7 @@ INSERT EDGE likes(rating) VALUES "p2" -> "m2": (4.0);
 INSERT EDGE likes(rating) VALUES "p3" -> "m1": (3.8);
 `)
 
-const { parsed, tagColors, edgeColors, error, summary } = useNebulaParser({ value: nGqlInput })
+const { parsed, tagColors, edgeColors, error, summary } = useNebulaParser(nGqlInput)
 
 // Editor panel width (default 40%)
 const editorWidth = ref(40)

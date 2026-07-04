@@ -36,7 +36,7 @@ function buildVisData() {
   const nodes = vertices.map(v => ({
     id: v.vid,
     label: `${v.vid} (${v.tagName})`,
-    title: `${v.vid}<br/>Tag: ${v.tagName}<br/>${Object.entries(v.props).map(([k, val]) => `${k}: ${val}`).join('<br/>')}`,
+    title: `${v.vid} | Tag: ${v.tagName} | ${Object.entries(v.props).map(([k, val]) => `${k}: ${val}`).join(' | ')}`,
     color: { background: colorForTag(v.tagName), border: '#ffffff' },
     size: 20,
     shape: 'dot',
@@ -50,7 +50,7 @@ function buildVisData() {
     from: e.fromVid,
     to: e.toVid,
     label: e.edgeType,
-    title: `${e.edgeType}<br/>From: ${e.fromVid} → ${e.toVid}${e.rank !== undefined ? `<br/>Rank: ${e.rank}` : ''}`,
+    title: `${e.edgeType} | From: ${e.fromVid} → ${e.toVid}${e.rank !== undefined ? ` | Rank: ${e.rank}` : ''}`,
     color: { color: colorForEdge(e.edgeType), highlight: colorForEdge(e.edgeType) },
     dashes: false,
     width: 1.5,

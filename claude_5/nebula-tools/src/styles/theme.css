@@ -1,0 +1,187 @@
+:root {
+  --bg-primary: #0f0f1a;
+  --bg-panel: #1a1a2e;
+  --bg-float: rgba(26, 26, 46, 0.88);
+  --bg-hover: #2a2a4e;
+  --border: #2a2a4e;
+  --border-focus: #4E79A7;
+  --text-primary: #e0e0e0;
+  --text-secondary: #aaa;
+  --text-muted: #555;
+  --accent: #4E79A7;
+  --accent-hover: #5a8fc7;
+  --danger: #e74c3c;
+  --success: #2ecc71;
+  --warning: #f39c12;
+  --radius: 8px;
+  --radius-sm: 4px;
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --font-mono: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--accent-hover);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+input, select, textarea, button {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}
+
+/* === Shared Button Styles === */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+  background: transparent;
+  color: var(--text-primary);
+}
+.btn:hover { opacity: 0.85; }
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-secondary { border-color: var(--border); color: var(--text-secondary); }
+.btn-secondary:hover { background: var(--bg-hover); color: var(--text-primary); }
+.btn-danger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+.btn-text {
+  border: none;
+  color: var(--accent);
+  padding: 4px 0;
+  font-size: 12px;
+}
+
+/* === Shared Form Styles === */
+.input {
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.input:focus { border-color: var(--accent); }
+select.input { cursor: pointer; }
+input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+
+/* === Modal === */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-box {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  min-width: 480px;
+  max-width: 640px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow);
+}
+.modal-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+.form-field {
+  margin-bottom: 14px;
+}
+.form-field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.prop-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.prop-name { flex: 2; }
+.prop-type { flex: 1.5; }
+.prop-default { flex: 1.5; }
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+}

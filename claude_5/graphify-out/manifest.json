@@ -1,0 +1,217 @@
+{
+  "2048-game/package.json": {
+    "mtime": 1782043131.5835378,
+    "ast_hash": "993d071d410e5c090c8bed4ade1ed4f7",
+    "semantic_hash": "993d071d410e5c090c8bed4ade1ed4f7"
+  },
+  "2048-game/src/App.vue": {
+    "mtime": 1782044198.3064635,
+    "ast_hash": "0735747280eae36a5cd80e7b729646b0",
+    "semantic_hash": "0735747280eae36a5cd80e7b729646b0"
+  },
+  "2048-game/src/components/GameBoard.vue": {
+    "mtime": 1782044129.4264922,
+    "ast_hash": "7d6a905abc6c83698b6be93808c74022",
+    "semantic_hash": "7d6a905abc6c83698b6be93808c74022"
+  },
+  "2048-game/src/components/GameControls.vue": {
+    "mtime": 1782044146.508996,
+    "ast_hash": "ae1b1d5d665bf3884ca514e678dafe43",
+    "semantic_hash": "ae1b1d5d665bf3884ca514e678dafe43"
+  },
+  "2048-game/src/components/GameHeader.vue": {
+    "mtime": 1782045369.6236784,
+    "ast_hash": "93cd6be99c804ebaada9f5a4a0ef157e",
+    "semantic_hash": "93cd6be99c804ebaada9f5a4a0ef157e"
+  },
+  "2048-game/src/components/GameOverlay.vue": {
+    "mtime": 1782045360.358993,
+    "ast_hash": "f941936493beb1985e7ffceb5715a88a",
+    "semantic_hash": "f941936493beb1985e7ffceb5715a88a"
+  },
+  "2048-game/src/components/GameTile.vue": {
+    "mtime": 1782045327.604069,
+    "ast_hash": "45ed3bb94e3ce4241b8907d91735f6d9",
+    "semantic_hash": "45ed3bb94e3ce4241b8907d91735f6d9"
+  },
+  "2048-game/src/composables/useGameLogic.ts": {
+    "mtime": 1782043972.5781715,
+    "ast_hash": "c0d320edfc577bb49c138b0430738f71",
+    "semantic_hash": "c0d320edfc577bb49c138b0430738f71"
+  },
+  "2048-game/src/composables/useGameState.ts": {
+    "mtime": 1782045346.9866924,
+    "ast_hash": "9da978e3a5b97b69897b785cec3e41ba",
+    "semantic_hash": "9da978e3a5b97b69897b785cec3e41ba"
+  },
+  "2048-game/src/composables/useStorage.ts": {
+    "mtime": 1782043921.9244163,
+    "ast_hash": "5732732be10b5bebf561595108c1def9",
+    "semantic_hash": "5732732be10b5bebf561595108c1def9"
+  },
+  "2048-game/src/main.ts": {
+    "mtime": 1782043131.7182622,
+    "ast_hash": "5227b76d0abf2452d8911726f108b5b1",
+    "semantic_hash": "5227b76d0abf2452d8911726f108b5b1"
+  },
+  "2048-game/src/types/game.ts": {
+    "mtime": 1782043911.3093483,
+    "ast_hash": "983aaabd68b33c6de68378b5b6d472f2",
+    "semantic_hash": "983aaabd68b33c6de68378b5b6d472f2"
+  },
+  "2048-game/src/vite-env.d.ts": {
+    "mtime": 1782043131.6953092,
+    "ast_hash": "c30fbce2d67706ff57bb698bd0f0739f",
+    "semantic_hash": "c30fbce2d67706ff57bb698bd0f0739f"
+  },
+  "2048-game/tsconfig.json": {
+    "mtime": 1782043131.6305397,
+    "ast_hash": "bc8d6c6b7451090acd10ace48720d9f9",
+    "semantic_hash": "bc8d6c6b7451090acd10ace48720d9f9"
+  },
+  "2048-game/tsconfig.node.json": {
+    "mtime": 1782043131.6483107,
+    "ast_hash": "767b2e9abe6452170cdc399ca052cfbc",
+    "semantic_hash": "767b2e9abe6452170cdc399ca052cfbc"
+  },
+  "2048-game/vite.config.ts": {
+    "mtime": 1782043131.6075375,
+    "ast_hash": "d337a06f729fdd9513d33882f7727678",
+    "semantic_hash": "d337a06f729fdd9513d33882f7727678"
+  },
+  "pyproject.toml": {
+    "mtime": 1782040470.7219646,
+    "ast_hash": "1d546ff8e816b8bf6dbdd49e317d50d1",
+    "semantic_hash": "1d546ff8e816b8bf6dbdd49e317d50d1"
+  },
+  "sliding-puzzle/package.json": {
+    "mtime": 1782047086.0923092,
+    "ast_hash": "6e5ece7e6095c2cba38f3b2fdbfda242",
+    "semantic_hash": "6e5ece7e6095c2cba38f3b2fdbfda242"
+  },
+  "sliding-puzzle/src/App.vue": {
+    "mtime": 1782047362.1475585,
+    "ast_hash": "240dee4b8bf08119619f7280209b35b6",
+    "semantic_hash": "240dee4b8bf08119619f7280209b35b6"
+  },
+  "sliding-puzzle/src/assets/presets/index.ts": {
+    "mtime": 1782047301.6148858,
+    "ast_hash": "7043b22f79fa648dff5152da46ab6055",
+    "semantic_hash": "7043b22f79fa648dff5152da46ab6055"
+  },
+  "sliding-puzzle/src/components/GameBoard.vue": {
+    "mtime": 1782047301.4936924,
+    "ast_hash": "b36593f1cb3440bda4ff414f45c790f1",
+    "semantic_hash": "b36593f1cb3440bda4ff414f45c790f1"
+  },
+  "sliding-puzzle/src/components/GameControls.vue": {
+    "mtime": 1782047301.589373,
+    "ast_hash": "841a27c9232be1e9a2527c099a301c19",
+    "semantic_hash": "841a27c9232be1e9a2527c099a301c19"
+  },
+  "sliding-puzzle/src/components/GameHeader.vue": {
+    "mtime": 1782047301.5216918,
+    "ast_hash": "7e9691994c2d82a0b38e32577c0fdc0f",
+    "semantic_hash": "7e9691994c2d82a0b38e32577c0fdc0f"
+  },
+  "sliding-puzzle/src/components/GameOverlay.vue": {
+    "mtime": 1782047403.74891,
+    "ast_hash": "90d0ada55fafccb471cb4db5946a573b",
+    "semantic_hash": "90d0ada55fafccb471cb4db5946a573b"
+  },
+  "sliding-puzzle/src/components/GameTile.vue": {
+    "mtime": 1782047301.4633014,
+    "ast_hash": "fd4c9ac903ff4307291a94e1e4ead7c1",
+    "semantic_hash": "fd4c9ac903ff4307291a94e1e4ead7c1"
+  },
+  "sliding-puzzle/src/components/ImagePicker.vue": {
+    "mtime": 1782047301.6378357,
+    "ast_hash": "c662a97891d077a4d0b9040eda7afe89",
+    "semantic_hash": "c662a97891d077a4d0b9040eda7afe89"
+  },
+  "sliding-puzzle/src/composables/usePuzzleLogic.ts": {
+    "mtime": 1782047238.3864946,
+    "ast_hash": "c9650f17fed238a68a82fb860940c1d2",
+    "semantic_hash": "c9650f17fed238a68a82fb860940c1d2"
+  },
+  "sliding-puzzle/src/composables/usePuzzleState.ts": {
+    "mtime": 1782047504.8666117,
+    "ast_hash": "62a1af01f6d5894362072f99659b9908",
+    "semantic_hash": "62a1af01f6d5894362072f99659b9908"
+  },
+  "sliding-puzzle/src/composables/useSolver.ts": {
+    "mtime": 1782047238.416479,
+    "ast_hash": "05cd8c405ad019f0df995150a586fd34",
+    "semantic_hash": "05cd8c405ad019f0df995150a586fd34"
+  },
+  "sliding-puzzle/src/composables/useStorage.ts": {
+    "mtime": 1782047178.7074742,
+    "ast_hash": "474fdc967767d57ce552299be948c11d",
+    "semantic_hash": "474fdc967767d57ce552299be948c11d"
+  },
+  "sliding-puzzle/src/main.ts": {
+    "mtime": 1782047086.251717,
+    "ast_hash": "5227b76d0abf2452d8911726f108b5b1",
+    "semantic_hash": "5227b76d0abf2452d8911726f108b5b1"
+  },
+  "sliding-puzzle/src/types/puzzle.ts": {
+    "mtime": 1782047178.6756618,
+    "ast_hash": "345f49564ae49eede07355dbacab28db",
+    "semantic_hash": "345f49564ae49eede07355dbacab28db"
+  },
+  "sliding-puzzle/src/vite-env.d.ts": {
+    "mtime": 1782047086.226718,
+    "ast_hash": "c30fbce2d67706ff57bb698bd0f0739f",
+    "semantic_hash": "c30fbce2d67706ff57bb698bd0f0739f"
+  },
+  "sliding-puzzle/tsconfig.json": {
+    "mtime": 1782047086.151428,
+    "ast_hash": "bc8d6c6b7451090acd10ace48720d9f9",
+    "semantic_hash": "bc8d6c6b7451090acd10ace48720d9f9"
+  },
+  "sliding-puzzle/tsconfig.node.json": {
+    "mtime": 1782047086.1784885,
+    "ast_hash": "767b2e9abe6452170cdc399ca052cfbc",
+    "semantic_hash": "767b2e9abe6452170cdc399ca052cfbc"
+  },
+  "sliding-puzzle/vite.config.ts": {
+    "mtime": 1782047086.126318,
+    "ast_hash": "d337a06f729fdd9513d33882f7727678",
+    "semantic_hash": "d337a06f729fdd9513d33882f7727678"
+  },
+  ".superpowers/sdd/progress.md": {
+    "mtime": 1782044860.6270044,
+    "ast_hash": "bd46abad05ec36d65f0305a02b3d3e1c",
+    "semantic_hash": "bd46abad05ec36d65f0305a02b3d3e1c"
+  },
+  "2048-game/index.html": {
+    "mtime": 1782043131.663308,
+    "ast_hash": "1ac685aa4be9bfe69b101f1885d2b645",
+    "semantic_hash": "1ac685aa4be9bfe69b101f1885d2b645"
+  },
+  "docs/superpowers/plans/2026-06-21-2048-game-plan.md": {
+    "mtime": 1782042952.8333063,
+    "ast_hash": "40a10c98e13f1b5ad0a17b2c2c4701dd",
+    "semantic_hash": "40a10c98e13f1b5ad0a17b2c2c4701dd"
+  },
+  "docs/superpowers/plans/2026-06-21-sliding-puzzle-plan.md": {
+    "mtime": 1782046946.6078615,
+    "ast_hash": "cf61edb96a3e642cfa7e684460a23d48",
+    "semantic_hash": "cf61edb96a3e642cfa7e684460a23d48"
+  },
+  "docs/superpowers/specs/2026-06-21-2048-game-design.md": {
+    "mtime": 1782042049.868244,
+    "ast_hash": "29d15bede75b711087ce1a229f67c361",
+    "semantic_hash": "29d15bede75b711087ce1a229f67c361"
+  },
+  "docs/superpowers/specs/2026-06-21-sliding-puzzle-design.md": {
+    "mtime": 1782046650.602789,
+    "ast_hash": "364b680815fab18fd6d9bfad4631c83b",
+    "semantic_hash": "364b680815fab18fd6d9bfad4631c83b"
+  },
+  "sliding-puzzle/index.html": {
+    "mtime": 1782047086.1984923,
+    "ast_hash": "489d1be9fb7ff602ee84798b49acfa17",
+    "semantic_hash": "489d1be9fb7ff602ee84798b49acfa17"
+  }
+}

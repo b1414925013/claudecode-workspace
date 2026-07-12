@@ -1,0 +1,7 @@
+D:\develop\claudecode-workspace\claude_5\.superpowers\sdd\progress.md
+D:\develop\claudecode-workspace\claude_5\2048-game\index.html
+D:\develop\claudecode-workspace\claude_5\docs\superpowers\plans\2026-06-21-2048-game-plan.md
+D:\develop\claudecode-workspace\claude_5\docs\superpowers\plans\2026-06-21-sliding-puzzle-plan.md
+D:\develop\claudecode-workspace\claude_5\docs\superpowers\specs\2026-06-21-2048-game-design.md
+D:\develop\claudecode-workspace\claude_5\docs\superpowers\specs\2026-06-21-sliding-puzzle-design.md
+D:\develop\claudecode-workspace\claude_5\sliding-puzzle\index.html

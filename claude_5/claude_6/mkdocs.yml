@@ -1,0 +1,77 @@
+site_name: pyhutool 文档
+site_description: Hutool 风格的 Python 工具库
+site_author: pyhutool contributors
+repo_url: https://github.com/pyhutool/pyhutool
+repo_name: pyhutool/pyhutool
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  language: zh
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - content.code.copy
+    - content.code.annotate
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: 切换暗色
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: 切换亮色
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - toc:
+      permalink: true
+
+nav:
+  - 首页: index.md
+  - 指南:
+      - 快速开始: guide/quickstart.md
+  - 核心模块:
+      - 异常体系: core/exceptions.md
+      - StrUtil 字符串工具: core/str_util.md
+      - ObjectUtil 对象工具: core/object_util.md
+      - DateUtil 日期时间: core/date_util.md
+      - CollUtil 集合: core/coll_util.md
+      - NumUtil 数值: core/num_util.md
+      - RandomUtil 随机: core/random_util.md
+      - IdUtil ID 生成: core/id_util.md
+      - RegexUtil 正则: core/regex_util.md
+  - 文本模块:
+      - StringBuilder 字符串构建器: text/string_builder.md
+      - UnicodeUtil Unicode 转义: text/unicode_util.md
+  - IO 模块:
+      - IoUtil 流工具: io/io_util.md
+      - FileUtil 文件工具: io/file_util.md
+      - ResourceUtil 资源加载: io/resource_util.md
+  - JSON 模块:
+      - JsonUtil JSON 工具: json/json_util.md
+  - HTTP 模块:
+      - HttpUtil HTTP 客户端: http/http_util.md
+  - 加密模块:
+      - DigestUtil 摘要/HMAC: crypto/digest_util.md
+      - CryptoUtil 对称加密: crypto/crypto_util.md
+  - JWT 模块:
+      - JWTUtil/JWT 签发与验证: jwt/jwt_util.md
+  - 定时任务模块:
+      - CronUtil 定时调度: cron/cron_util.md
+  - SSH 模块:
+      - JschUtil SSH/SFTP: extra/ssh/jsch_util.md
+  - 关于:
+      - 设计理念: about/design.md
+      - 与 Hutool 的差异: about/differences.md

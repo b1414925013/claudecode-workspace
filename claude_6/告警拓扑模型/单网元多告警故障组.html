@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>单网元多告警故障组 - 3D 可视化</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: #0a0a1a;
+            color: #fff;
+            overflow: hidden;
+        }
+        #container { width: 100vw; height: 100vh; }
+
+        /* 标题栏 */
+        #titleBar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-bottom: 1px solid rgba(255,102,0,0.3);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #titleBar h1 {
+            color: #ff6600;
+            font-size: 20px;
+        }
+        #titleBar .subtitle {
+            color: #888;
+            font-size: 13px;
+        }
+
+        /* 图例面板 */
+        #legend {
+            position: fixed;
+            top: 80px;
+            left: 20px;
+            background: rgba(20, 20, 40, 0.95);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 20px;
+            min-width: 260px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+        #legend h3 {
+            font-size: 15px;
+            margin-bottom: 14px;
+            color: #00d4ff;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 8px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            font-size: 13px;
+        }
+        .legend-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .legend-line {
+            width: 30px;
+            height: 3px;
+            margin-right: 10px;
+            border-radius: 2px;
+        }
+
+        /* 故障组详情面板 */
+        #faultPanel {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: rgba(20, 20, 40, 0.95);
+            border: 2px solid #ff6600;
+            border-radius: 12px;
+            padding: 20px;
+            width: 320px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(255,102,0,0.2);
+        }
+        #faultPanel h3 {
+            color: #ff6600;
+            font-size: 16px;
+            margin-bottom: 16px;
+            text-align: center;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255,102,0,0.3);
+        }
+        .fault-group {
+            background: rgba(255,102,0,0.1);
+            border: 1px solid rgba(255,102,0,0.4);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+        .fault-group:last-child { margin-bottom: 0; }
+        .fault-group-title {
+            color: #ff6600;
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        .fault-group-info {
+            font-size: 12px;
+            color: #aaa;
+            margin: 4px 0;
+        }
+        .fault-group-alarms {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed rgba(255,102,0,0.3);
+        }
+        .alarm-tag {
+            display: inline-block;
+            background: rgba(255,107,107,0.2);
+            color: #ff6b6b;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            margin: 3px 3px 3px 0;
+        }
+
+        /* 规则说明面板 */
+        #rulesPanel {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(20, 20, 40, 0.95);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 16px 20px;
+            max-width: 400px;
+            backdrop-filter: blur(10px);
+        }
+        #rulesPanel h4 {
+            color: #00d4ff;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        #rulesPanel p {
+            font-size: 12px;
+            color: #aaa;
+            margin: 6px 0;
+            line-height: 1.5;
+        }
+        #rulesPanel .highlight {
+            color: #ff6600;
+            font-weight: bold;
+        }
+
+        /* 操作提示 */
+        #tips {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(20, 20, 40, 0.9);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 12px;
+            color: #888;
+        }
+        #tips div { margin: 4px 0; }
+        #tips span { color: #00d4ff; }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+
+    <!-- 标题栏 -->
+    <div id="titleBar">
+        <h1>单网元故障组</h1>
+        <span class="subtitle">同一网元上有 ≥2 个告警时形成故障组</span>
+    </div>
+
+    <!-- 图例 -->
+    <div id="legend">
+        <h3>图例</h3>
+        <div class="legend-item">
+            <svg width="20" height="20" viewBox="0 0 20 20" style="margin-right:10px;">
+                <polygon points="10,2 18,10 10,18 2,10" fill="#ff6b6b" stroke="#ff6b6b"/>
+            </svg>
+            <span>告警 (alarm)</span>
+            <span style="color:#888;margin-left:8px;">— 八面体</span>
+        </div>
+        <div class="legend-item">
+            <svg width="20" height="20" viewBox="0 0 20 20" style="margin-right:10px;">
+                <polygon points="10,2 18,7 18,13 10,18 2,13 2,7" fill="#00d4ff" stroke="#00d4ff"/>
+            </svg>
+            <span>网元 (ne)</span>
+            <span style="color:#888;margin-left:8px;">— 六边形</span>
+        </div>
+        <div class="legend-item">
+            <svg width="20" height="20" viewBox="0 0 20 20" style="margin-right:10px;">
+                <rect x="2" y="7" width="16" height="6" fill="#4fc3f7" stroke="#4fc3f7"/>
+            </svg>
+            <span>单板 (board)</span>
+            <span style="color:#888;margin-left:8px;">— 长方体</span>
+        </div>
+        <div class="legend-item">
+            <svg width="20" height="20" viewBox="0 0 20 20" style="margin-right:10px;">
+                <rect x="5" y="5" width="10" height="10" fill="#81d4fa" stroke="#81d4fa"/>
+            </svg>
+            <span>端口 (port)</span>
+            <span style="color:#888;margin-left:8px;">— 立方体</span>
+        </div>
+        <div style="margin-top:16px;border-top:1px solid rgba(255,255,255,0.1);padding-top:12px;">
+            <div class="legend-item">
+                <div class="legend-line" style="background:#ffc107;"></div>
+                <span>trigger (告警→告警)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-line" style="background:#e91e63;"></div>
+                <span>happen (告警→设备)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-line" style="background:#9c27b0;"></div>
+                <span>enhance (告警→设备)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-line" style="background:#4caf50;"></div>
+                <span>leave (设备父子)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-line" style="background:#2196f3;"></div>
+                <span>link (设备连接)</span>
+            </div>
+            <div class="legend-item" style="margin-top:10px;padding-top:8px;border-top:1px dashed rgba(255,255,255,0.1);">
+                <div class="legend-line" style="background:#ff6600;"></div>
+                <span>故障组包围圈</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 故障组详情面板 -->
+    <div id="faultPanel">
+        <h3>⚠️ 故障组列表</h3>
+        <div id="faultGroupList"></div>
+        <div id="noFaultGroup" style="text-align:center;color:#666;font-size:13px;padding:20px;">
+            暂无单网元故障组
+        </div>
+    </div>
+
+    <!-- 规则说明 -->
+    <div id="rulesPanel">
+        <h4>故障组识别规则</h4>
+        <p>1. 遍历所有 <span class="highlight">happen</span> 边,找到告警直接关联的设备</p>
+        <p>2. 追溯该设备到其所属的网元(通过 <span class="highlight">leave</span> 边)</p>
+        <p>3. 统计每个网元上的告警数量</p>
+        <p>4. 如果数量 <span class="highlight">≥ 2</span>,则该网元形成故障组</p>
+    </div>
+
+    <!-- 操作提示 -->
+    <div id="tips">
+        <div><span>拖拽</span> 旋转视角</div>
+        <div><span>滚轮</span> 缩放</div>
+        <div><span>右键拖拽</span> 平移</div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // ========== 拓扑数据模型 ==========
+        // 简化版:只用最少的设备展示单网元多告警故障组
+        const graphData = {
+            nodes: [
+                // 告警节点 - alarm1 和 alarm2 都在 ne1 上,形成故障组
+                { id: 'alarm1', type: 'alarm', name: '告警A' },
+                { id: 'alarm2', type: 'alarm', name: '告警B' },
+
+                // 网元 - 只用一个网元
+                { id: 'ne1', type: 'ne', name: '网元NE1' },
+
+                // 单板 - 只用一个单板
+                { id: 'board1', type: 'board', name: '单板' },
+
+                // 端口 - 只用两个端口
+                { id: 'port1', type: 'port', name: '端口1' },
+                { id: 'port2', type: 'port', name: '端口2' },
+            ],
+            edges: [
+                // 设备父子关系 (leave)
+                { source: 'ne1', target: 'board1', type: 'leave' },
+                { source: 'board1', target: 'port1', type: 'leave' },
+                { source: 'board1', target: 'port2', type: 'leave' },
+
+                // 设备间连接关系 (link)
+                { source: 'port1', target: 'port2', type: 'link' },
+
+                // 告警与设备关联 (happen/enhance)
+                // 故障组: alarm1 和 alarm2 都连接到 ne1
+                { source: 'alarm1', target: 'port1', type: 'happen' },
+                { source: 'alarm1', target: 'ne1', type: 'enhance' },
+                { source: 'alarm2', target: 'port2', type: 'happen' },
+                { source: 'alarm2', target: 'ne1', type: 'enhance' },
+            ]
+        };
+
+        // ========== 单网元故障组计算 ==========
+        // 规则:同一个网元上有 ≥2 个告警,形成故障组
+        function calculateFaultGroups() {
+            const alarmToNE = {};  // 告警 -> 网元的映射
+
+            // 遍历所有 happen 边,找到告警直接关联的设备
+            graphData.edges.forEach(edge => {
+                if (edge.type === 'happen') {
+                    const deviceId = edge.target;
+                    const alarmId = edge.source;
+                    const neId = findParentNE(deviceId);
+                    if (neId) {
+                        if (!alarmToNE[neId]) alarmToNE[neId] = [];
+                        alarmToNE[neId].push(alarmId);
+                    }
+                }
+            });
+
+            // 过滤出有 ≥2 个告警的网元,形成故障组
+            const groups = [];
+            Object.entries(alarmToNE).forEach(([neId, alarmIds]) => {
+                if (alarmIds.length >= 2) {
+                    groups.push({
+                        neId: neId,
+                        alarms: [...new Set(alarmIds)],  // 去重
+                        count: alarmIds.length
+                    });
+                }
+            });
+
+            return groups;
+        }
+
+        // 查找设备所属的网元(向上追溯 leave 边)
+        function findParentNE(deviceId) {
+            const visited = new Set();
+            const queue = [deviceId];
+
+            while (queue.length > 0) {
+                const current = queue.shift();
+                if (visited.has(current)) continue;
+                visited.add(current);
+
+                // 查找当前节点的父节点(通过 leave 边)
+                const parentEdge = graphData.edges.find(
+                    e => e.target === current && e.type === 'leave'
+                );
+
+                if (parentEdge) {
+                    const parentId = parentEdge.source;
+                    const parentNode = graphData.nodes.find(n => n.id === parentId);
+                    if (parentNode && parentNode.type === 'ne') {
+                        return parentId;
+                    }
+                    // 继续向上查找
+                    queue.push(parentId);
+                }
+            }
+            return null;
+        }
+
+        // 计算故障组
+        const faultGroups = calculateFaultGroups();
+        console.log('检测到的单网元故障组:', faultGroups);
+
+        // ========== 故障组告警间 trigger 边生成 ==========
+        // 如果出现故障组,则涉及到的告警之间使用 trigger 连接
+        faultGroups.forEach(group => {
+            const alarms = group.alarms;
+            // 为告警之间两两添加 trigger 边
+            for (let i = 0; i < alarms.length; i++) {
+                for (let j = i + 1; j < alarms.length; j++) {
+                    // 检查是否已存在该边
+                    const exists = graphData.edges.some(
+                        e => e.source === alarms[i] && e.target === alarms[j] && e.type === 'trigger'
+                    );
+                    if (!exists) {
+                        graphData.edges.push({
+                            source: alarms[i],
+                            target: alarms[j],
+                            type: 'trigger'
+                        });
+                    }
+                }
+            }
+        });
+
+        // ========== Three.js 场景初始化 ==========
+        const container = document.getElementById('container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0a1a);
+
+        // 星空背景
+        const starGeo = new THREE.BufferGeometry();
+        const starPositions = new Float32Array(2000 * 3);
+        for (let i = 0; i < 2000 * 3; i++) {
+            starPositions[i] = (Math.random() - 0.5) * 200;
+        }
+        starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+        scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.1 })));
+
+        // 相机
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(20, 15, 25);
+
+        // 渲染器
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        container.appendChild(renderer.domElement);
+
+        // 控制器
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+
+        // 灯光
+        scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(10, 20, 10);
+        scene.add(dirLight);
+
+        // ========== 节点和边存储 ==========
+        const nodeObjects = {};
+        const nodeMeshes = [];
+
+        // 颜色配置
+        const nodeColors = {
+            alarm: 0xff6b6b,
+            ne: 0x00d4ff,
+            board: 0x4fc3f7,
+            port: 0x81d4fa
+        };
+        const edgeColors = {
+            trigger: 0xffc107,  // 金黄色/琥珀色，与故障组包围圈区分
+            happen: 0xe91e63,
+            enhance: 0x9c27b0,
+            leave: 0x4caf50,
+            link: 0x2196f3
+        };
+
+        // 创建节点
+        function createNode(nodeData) {
+            const group = new THREE.Group();
+            const color = nodeColors[nodeData.type];
+            const size = nodeData.type === 'alarm' ? 0.9 : 0.7;
+
+            let geo, mesh;
+            switch(nodeData.type) {
+                case 'alarm':
+                    geo = new THREE.OctahedronGeometry(size, 0);
+                    mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
+                        color, emissive: color, emissiveIntensity: 0.4,
+                        metalness: 0.5, roughness: 0.3, flatShading: true
+                    }));
+                    break;
+                case 'ne':
+                    geo = new THREE.CylinderGeometry(size, size, size * 0.6, 6);
+                    mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
+                        color, emissive: color, emissiveIntensity: 0.3,
+                        metalness: 0.4, roughness: 0.4
+                    }));
+                    break;
+                case 'board':
+                    geo = new THREE.BoxGeometry(size * 1.2, size * 0.3, size * 0.8);
+                    mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
+                        color, emissive: color, emissiveIntensity: 0.3,
+                        metalness: 0.3, roughness: 0.5
+                    }));
+                    break;
+                case 'port':
+                    geo = new THREE.BoxGeometry(size * 0.6, size * 0.6, size * 0.6);
+                    mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
+                        color, emissive: color, emissiveIntensity: 0.3,
+                        metalness: 0.4, roughness: 0.4
+                    }));
+                    break;
+            }
+
+            mesh.userData = nodeData;
+            group.add(mesh);
+
+            // 光晕
+            const glow = new THREE.Mesh(
+                new THREE.SphereGeometry(size * 1.5, 16, 16),
+                new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.12 })
+            );
+            group.add(glow);
+
+            // 标签
+            const canvas = document.createElement('canvas');
+            canvas.width = 256; canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 22px Microsoft YaHei';
+            ctx.textAlign = 'center';
+            ctx.fillText(nodeData.name, 128, 40);
+            const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
+                map: new THREE.CanvasTexture(canvas), transparent: true
+            }));
+            sprite.scale.set(3.5, 0.875, 1);
+            sprite.position.y = size + 1.2;
+            group.add(sprite);
+
+            nodeMeshes.push(mesh);
+            return group;
+        }
+
+        // 创建边
+        function createEdge(edgeData, sourcePos, targetPos) {
+            const color = edgeColors[edgeData.type];
+            const dashed = edgeData.type === 'happen' || edgeData.type === 'enhance';
+
+            let line;
+            if (dashed) {
+                // 虚线
+                const segments = 8;
+                const subLines = [];
+                for (let i = 0; i < segments; i += 2) {
+                    const start = new THREE.Vector3().lerpVectors(sourcePos, targetPos, i / segments);
+                    const end = new THREE.Vector3().lerpVectors(sourcePos, targetPos, (i + 1) / segments);
+                    subLines.push(new THREE.Line(
+                        new THREE.BufferGeometry().setFromPoints([start, end]),
+                        new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.8 })
+                    ));
+                }
+                line = new THREE.Group();
+                subLines.forEach(sl => line.add(sl));
+            } else {
+                line = new THREE.Line(
+                    new THREE.BufferGeometry().setFromPoints([sourcePos, targetPos]),
+                    new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.8 })
+                );
+            }
+
+            // 箭头
+            const dir = new THREE.Vector3().subVectors(targetPos, sourcePos).normalize();
+            const arrow = new THREE.Mesh(
+                new THREE.ConeGeometry(0.15, 0.4, 8),
+                new THREE.MeshBasicMaterial({ color })
+            );
+            arrow.position.copy(targetPos).addScaledVector(dir, -0.3);
+            arrow.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+            arrow.visible = edgeData.type !== 'leave';
+            line.add(arrow);
+
+            return line;
+        }
+
+        // ========== 布局计算 ==========
+        function calculateLayout() {
+            const positions = {};
+
+            // 简化布局:告警在上,网元在中,单板在下,端口在底部
+            // alarm 层 - 上方
+            positions['alarm1'] = new THREE.Vector3(-2, 6, 0);
+            positions['alarm2'] = new THREE.Vector3(2, 6, 0);
+
+            // ne 层 - 中间
+            positions['ne1'] = new THREE.Vector3(0, 2, 0);
+
+            // board 层 - 下方
+            positions['board1'] = new THREE.Vector3(0, -2, 0);
+
+            // port 层 - 底部
+            positions['port1'] = new THREE.Vector3(-2, -6, 0);
+            positions['port2'] = new THREE.Vector3(2, -6, 0);
+
+            return positions;
+        }
+
+        const nodePositions = calculateLayout();
+
+        // ========== 构建图 ==========
+        graphData.nodes.forEach(node => {
+            const obj = createNode(node);
+            obj.position.copy(nodePositions[node.id]);
+            scene.add(obj);
+            nodeObjects[node.id] = obj;
+        });
+
+        graphData.edges.forEach(edge => {
+            scene.add(createEdge(edge, nodePositions[edge.source], nodePositions[edge.target]));
+        });
+
+        // ========== 故障组可视化 ==========
+        faultGroups.forEach(group => {
+            const alarmPositions = group.alarms.map(aid => nodePositions[aid]);
+
+            // 计算包围圈中心点
+            let centerX = 0, centerY = 0, centerZ = 0;
+            alarmPositions.forEach(pos => {
+                centerX += pos.x; centerY += pos.y; centerZ += pos.z;
+            });
+            centerX /= alarmPositions.length;
+            centerY /= alarmPositions.length;
+            centerZ /= alarmPositions.length;
+
+            // 创建椭圆包围圈
+            const ellipsePoints = [];
+            for (let i = 0; i <= 64; i++) {
+                const angle = (i / 64) * Math.PI * 2;
+                ellipsePoints.push(new THREE.Vector3(
+                    centerX + Math.cos(angle) * 4,
+                    centerY + Math.sin(angle) * 0.8,
+                    centerZ
+                ));
+            }
+            scene.add(new THREE.LineLoop(
+                new THREE.BufferGeometry().setFromPoints(ellipsePoints),
+                new THREE.LineBasicMaterial({ color: 0xff6600, transparent: true, opacity: 0.9 })
+            ));
+
+            // 故障组标签
+            const labelCanvas = document.createElement('canvas');
+            labelCanvas.width = 512; labelCanvas.height = 128;
+            const ctx = labelCanvas.getContext('2d');
+            ctx.fillStyle = 'rgba(255, 102, 0, 0.9)';
+            ctx.beginPath();
+            roundRect(ctx, 0, 0, 512, 128, 16);
+            ctx.fill();
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 32px Microsoft YaHei';
+            ctx.textAlign = 'center';
+            ctx.fillText('单网元故障组', 256, 45);
+            ctx.font = '26px Microsoft YaHei';
+            ctx.fillStyle = '#fffde7';
+            ctx.fillText(`告警数: ${group.count}`, 256, 85);
+
+            const labelSprite = new THREE.Sprite(new THREE.SpriteMaterial({
+                map: new THREE.CanvasTexture(labelCanvas), transparent: true
+            }));
+            labelSprite.scale.set(6, 1.5, 1);
+            labelSprite.position.set(centerX, centerY + 3, centerZ);
+            scene.add(labelSprite);
+
+            // 更新右侧面板
+            const neNode = graphData.nodes.find(n => n.id === group.neId);
+            document.getElementById('faultGroupList').innerHTML += `
+                <div class="fault-group">
+                    <div class="fault-group-title">⚠️ ${neNode?.name || group.neId}</div>
+                    <div class="fault-group-info">告警数量: <strong>${group.count}</strong></div>
+                    <div class="fault-group-alarms">
+                        ${group.alarms.map(aid => {
+                            const alarm = graphData.nodes.find(n => n.id === aid);
+                            return `<span class="alarm-tag">${alarm?.name || aid}</span>`;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        });
+
+        // 如果有故障组,隐藏"暂无"提示
+        if (faultGroups.length > 0) {
+            document.getElementById('noFaultGroup').style.display = 'none';
+        }
+
+        // 圆角矩形辅助函数
+        function roundRect(ctx, x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + w - r, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+            ctx.lineTo(x + w, y + h - r);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            ctx.lineTo(x + r, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+            ctx.lineTo(x, y + r);
+            ctx.quadraticCurveTo(x, y, x + r, y);
+            ctx.closePath();
+        }
+
+        // ========== 窗口大小调整 ==========
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // ========== 动画循环 ==========
+        function animate() {
+            requestAnimationFrame(animate);
+            const time = Date.now() * 0.001;
+
+            // 光晕呼吸效果
+            Object.values(nodeObjects).forEach((obj, i) => {
+                if (obj.children[1]) {
+                    obj.children[1].material.opacity = 0.12 + Math.sin(time * 2 + i * 0.5) * 0.04;
+                }
+            });
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        animate();
+    </script>
+</body>
+</html>

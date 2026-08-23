@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>鸡兔同笼 - 3D小课堂</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Comic Sans MS", "微软雅黑", sans-serif;
+            background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+            overflow: hidden;
+            height: 100vh;
+        }
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        /* 顶部标题样式 */
+        #title {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
+            padding: 15px 40px;
+            border-radius: 30px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            z-index: 10;
+            text-align: center;
+        }
+        #title h1 {
+            color: #d63031;
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+        #title p {
+            color: #636e72;
+            font-size: 14px;
+        }
+        /* 左侧信息面板样式 */
+        #info-panel {
+            position: absolute;
+            top: 130px;
+            left: 20px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            z-index: 10;
+            min-width: 220px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+            font-size: 18px;
+        }
+        .info-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .animal-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .chicken-color { background: #fdcb6e; }
+        .rabbit-color { background: #a29bfe; }
+        .info-value {
+            font-weight: bold;
+            color: #2d3436;
+            font-size: 22px;
+        }
+        .total-row {
+            border-top: 2px dashed #dfe6e9;
+            margin-top: 15px;
+            padding-top: 15px;
+        }
+        /* 右侧教学面板样式 */
+        #tutorial-panel {
+            position: absolute;
+            top: 130px;
+            right: 20px;
+            width: 340px;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            z-index: 10;
+            overflow: hidden;
+        }
+        #tutorial-header {
+            background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+            color: #fff;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #tutorial-header h2 {
+            font-size: 20px;
+        }
+        #tutorial-close {
+            background: rgba(255,255,255,0.3);
+            border: none;
+            color: #fff;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #tutorial-close:hover {
+            background: rgba(255,255,255,0.5);
+        }
+        #tutorial-body {
+            padding: 20px;
+        }
+        #tutorial-step-content {
+            font-size: 16px;
+            line-height: 2;
+            color: #2d3436;
+            min-height: 200px;
+            margin-bottom: 15px;
+        }
+        .step-number {
+            display: inline-block;
+            background: #6c5ce7;
+            color: #fff;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 28px;
+            font-size: 14px;
+            margin-right: 8px;
+        }
+        .highlight {
+            color: #d63031;
+            font-weight: bold;
+            font-size: 22px;
+            padding: 0 4px;
+        }
+        .highlight-green {
+            color: #00b894;
+            font-weight: bold;
+            font-size: 22px;
+            padding: 0 4px;
+        }
+        .highlight-blue {
+            color: #0984e3;
+            font-weight: bold;
+            font-size: 20px;
+            padding: 0 4px;
+        }
+        .formula-box {
+            background: #f5f6fa;
+            border-radius: 10px;
+            padding: 12px;
+            margin: 10px 0;
+            font-size: 18px;
+            text-align: center;
+        }
+        #tutorial-next-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        #tutorial-next-btn:hover {
+            transform: scale(1.03);
+        }
+        #tutorial-next-btn:active {
+            transform: scale(0.98);
+        }
+        /* 底部控制按钮样式 */
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
+            padding: 15px 25px;
+            border-radius: 20px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            z-index: 10;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .control-label {
+            font-size: 14px;
+            color: #636e72;
+        }
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        button {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            font-size: 22px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+            color: #fff;
+        }
+        button:hover { transform: scale(1.15); }
+        button:active { transform: scale(0.95); }
+        .btn-chicken { background: #fdcb6e; }
+        .btn-rabbit { background: #a29bfe; }
+        .count {
+            font-size: 24px;
+            font-weight: bold;
+            min-width: 40px;
+            text-align: center;
+            color: #2d3436;
+        }
+        #hint {
+            position: absolute;
+            bottom: 110px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255,255,255,0.9);
+            padding: 8px 20px;
+            border-radius: 15px;
+            color: #636e72;
+            font-size: 13px;
+            z-index: 10;
+        }
+        /* 显示教学面板的按钮(面板关闭后显示) */
+        #show-tutorial-btn {
+            position: absolute;
+            top: 130px;
+            right: 20px;
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 15px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            z-index: 10;
+            cursor: pointer;
+            border: none;
+            font-size: 16px;
+            font-weight: bold;
+            width: auto;
+            height: auto;
+        }
+        #show-tutorial-btn:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部标题 -->
+    <div id="title">
+        <h1>🐔 鸡兔同笼 🐰</h1>
+        <p>数一数,有几只鸡?几只兔子?一共几条腿?</p>
+    </div>
+
+    <!-- 左侧信息面板 -->
+    <div id="info-panel">
+        <div class="info-row">
+            <span class="info-label">
+                <span class="animal-icon chicken-color"></span>小鸡
+            </span>
+            <span class="info-value" id="chicken-count">2</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">
+                <span class="animal-icon rabbit-color"></span>兔子
+            </span>
+            <span class="info-value" id="rabbit-count">2</span>
+        </div>
+        <div class="info-row total-row">
+            <span class="info-label">总头数</span>
+            <span class="info-value" id="head-count">4</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">总腿数</span>
+            <span class="info-value" id="leg-count">12</span>
+        </div>
+    </div>
+
+    <!-- 3D画布容器 -->
+    <div id="canvas-container"></div>
+
+    <!-- 操作提示 -->
+    <div id="hint">💡 鼠标拖动可以360度转动视角,滚轮缩放~</div>
+
+    <!-- 底部控制按钮 -->
+    <div id="controls">
+        <div class="control-group">
+            <span class="control-label">🐔 小鸡 (2条腿)</span>
+            <div class="btn-group">
+                <button class="btn-chicken" onclick="changeChicken(-1)">-</button>
+                <span class="count" id="chicken-display">2</span>
+                <button class="btn-chicken" onclick="changeChicken(1)">+</button>
+            </div>
+        </div>
+        <div class="control-group">
+            <span class="control-label">🐰 兔子 (4条腿)</span>
+            <div class="btn-group">
+                <button class="btn-rabbit" onclick="changeRabbit(-1)">-</button>
+                <span class="count" id="rabbit-display">2</span>
+                <button class="btn-rabbit" onclick="changeRabbit(1)">+</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 显示教学面板的按钮(面板关闭后显示) -->
+    <button id="show-tutorial-btn" style="display:none;" onclick="showTutorial()">📝 打开讲解</button>
+
+    <!-- 右侧教学面板 -->
+    <div id="tutorial-panel">
+        <div id="tutorial-header">
+            <h2>📝 一起想一想</h2>
+            <button id="tutorial-close" onclick="hideTutorial()">×</button>
+        </div>
+        <div id="tutorial-body">
+            <div id="tutorial-step-content"></div>
+            <button id="tutorial-next-btn" onclick="nextTutorialStep()">开始讲解</button>
+        </div>
+    </div>
+
+    <!-- Three.js ES Module 导入 -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.156.1/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.156.1/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        // 将交互函数挂载到 window,供 HTML onclick 调用
+        window.changeChicken = changeChicken;
+        window.changeRabbit = changeRabbit;
+        window.nextTutorialStep = nextTutorialStep;
+        window.showTutorial = showTutorial;
+        window.hideTutorial = hideTutorial;
+
+        // ========== 全局变量 ==========
+        let scene, camera, renderer, controls;
+        let chickenGroup, rabbitGroup;
+        let chickens = 2, rabbits = 2;
+        const MAX_ANIMALS = 15;  // 最大动物数量
+        let tutorialStep = 0;    // 当前讲解步骤
+        const TOTAL_STEPS = 8;   // 讲解总步骤数(含腿消失动画)
+
+        // ========== 场景初始化 ==========
+        function init() {
+            // 创建场景
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xb2ebf2);
+            scene.fog = new THREE.Fog(0xb2ebf2, 15, 40);
+
+            // 创建相机
+            camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.set(8, 8, 12);
+
+            // 创建渲染器
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            // 轨道控制器,允许鼠标360度自由旋转
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.minDistance = 5;              // 最小缩放距离
+            controls.maxDistance = 30;             // 最大缩放距离
+            controls.minPolarAngle = 0;            // 允许从正上方看
+            controls.maxPolarAngle = Math.PI;      // 允许从正下方看(360度旋转)
+            controls.target.set(0, 1, 0);
+
+            // 添加光照
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 15, 10);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            directionalLight.shadow.camera.left = -15;
+            directionalLight.shadow.camera.right = 15;
+            directionalLight.shadow.camera.top = 15;
+            directionalLight.shadow.camera.bottom = -15;
+            scene.add(directionalLight);
+
+            // 创建地面
+            createGround();
+
+            // 创建笼子
+            createCage();
+
+            // 创建动物容器
+            chickenGroup = new THREE.Group();
+            rabbitGroup = new THREE.Group();
+            scene.add(chickenGroup);
+            scene.add(rabbitGroup);
+
+            // 初始生成动物
+            updateAnimals();
+
+            // 初始化讲解内容
+            updateTutorialContent();
+
+            // 监听窗口大小变化
+            window.addEventListener('resize', onWindowResize, false);
+        }
+
+        // ========== 创建草地地面 ==========
+        function createGround() {
+            const groundGeometry = new THREE.CircleGeometry(12, 64);
+            const groundMaterial = new THREE.MeshStandardMaterial({
+                color: 0x81c784,
+                roughness: 0.8
+            });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+        }
+
+        // ========== 创建笼子(围栏) ==========
+        function createCage() {
+            const fenceMaterial = new THREE.MeshStandardMaterial({
+                color: 0x8d6e63,
+                roughness: 0.6
+            });
+            const cageSize = 7;
+            const fenceHeight = 1.5;
+
+            // 四面围栏
+            for (let i = 0; i < 4; i++) {
+                const angle = (i * Math.PI) / 2;
+                const isXAxis = i % 2 === 0;
+
+                // 围栏横杆
+                for (let h = 0; h < 2; h++) {
+                    const barGeo = new THREE.CylinderGeometry(0.08, 0.08, isXAxis ? cageSize * 2 : cageSize * 2);
+                    const bar = new THREE.Mesh(barGeo, fenceMaterial);
+                    bar.rotation.z = Math.PI / 2;
+                    bar.rotation.y = angle;
+                    bar.position.set(
+                        Math.cos(angle) * fenceHeight * (h + 1) * 0.4,
+                        fenceHeight * (h + 1) * 0.4,
+                        Math.sin(angle) * fenceHeight * (h + 1) * 0.4
+                    );
+                    bar.castShadow = true;
+                    scene.add(bar);
+                }
+
+                // 围栏竖杆
+                for (let j = -1; j <= 1; j++) {
+                    const postGeo = new THREE.CylinderGeometry(0.1, 0.1, fenceHeight);
+                    const post = new THREE.Mesh(postGeo, fenceMaterial);
+                    if (isXAxis) {
+                        post.position.set(j * cageSize, fenceHeight / 2, Math.sin(angle) * cageSize);
+                    } else {
+                        post.position.set(Math.cos(angle) * cageSize, fenceHeight / 2, j * cageSize);
+                    }
+                    post.castShadow = true;
+                    scene.add(post);
+                }
+            }
+        }
+
+        // ========== 创建小鸡模型(可爱版) ==========
+        function createChicken(x, z) {
+            const chicken = new THREE.Group();
+            const bodyColor = 0xffd93d;      // 柔和黄色
+            const detailColor = 0xff6b6b;    // 红色细节(鸡冠)
+            const beakColor = 0xffa502;      // 橙色嘴巴和腿
+            const cheekColor = 0xffb3ba;     // 粉色腮红
+
+            // 身体(圆润椭球)
+            const bodyGeo = new THREE.SphereGeometry(0.55, 24, 24);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.4, metalness: 0.1 });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.scale.set(1, 0.85, 1.15);
+            body.position.y = 0.6;
+            body.castShadow = true;
+            chicken.add(body);
+
+            // 尾巴(小翘尾)
+            const tailGeo = new THREE.ConeGeometry(0.18, 0.35, 8);
+            const tailMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.4 });
+            const tail = new THREE.Mesh(tailGeo, tailMat);
+            tail.position.set(0, 0.75, -0.55);
+            tail.rotation.x = -Math.PI / 3;
+            chicken.add(tail);
+
+            // 头部(圆球)
+            const headGeo = new THREE.SphereGeometry(0.36, 24, 24);
+            const headMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.4, metalness: 0.1 });
+            const head = new THREE.Mesh(headGeo, headMat);
+            head.position.set(0, 1.1, 0.3);
+            head.castShadow = true;
+            chicken.add(head);
+
+            // 鸡冠(3个小球组合,更立体)
+            const combMat = new THREE.MeshStandardMaterial({ color: detailColor, roughness: 0.3 });
+            const combConfigs = [
+                { x: 0, z: 0.28, sy: 1.3 },
+                { x: 0.1, z: 0.33, sy: 1.0 },
+                { x: -0.1, z: 0.33, sy: 1.0 }
+            ];
+            combConfigs.forEach(c => {
+                const combGeo = new THREE.SphereGeometry(0.09, 12, 12);
+                const comb = new THREE.Mesh(combGeo, combMat);
+                comb.position.set(c.x, 1.42, c.z);
+                comb.scale.set(1, c.sy, 0.6);
+                chicken.add(comb);
+            });
+
+            // 眼睛(黑色大球)
+            const eyeGeo = new THREE.SphereGeometry(0.07, 16, 16);
+            const eyeMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
+            const eye1 = new THREE.Mesh(eyeGeo, eyeMat);
+            eye1.position.set(0.15, 1.15, 0.58);
+            chicken.add(eye1);
+            const eye2 = new THREE.Mesh(eyeGeo, eyeMat);
+            eye2.position.set(-0.15, 1.15, 0.58);
+            chicken.add(eye2);
+
+            // 眼睛高光(白色小点)
+            const hlGeo = new THREE.SphereGeometry(0.025, 8, 8);
+            const hlMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+            const hl1 = new THREE.Mesh(hlGeo, hlMat);
+            hl1.position.set(0.17, 1.17, 0.64);
+            chicken.add(hl1);
+            const hl2 = new THREE.Mesh(hlGeo, hlMat);
+            hl2.position.set(-0.13, 1.17, 0.64);
+            chicken.add(hl2);
+
+            // 脸颊腮红(半透明粉色)
+            const cheekGeo = new THREE.SphereGeometry(0.08, 12, 12);
+            const cheekMat = new THREE.MeshStandardMaterial({ color: cheekColor, transparent: true, opacity: 0.6 });
+            const cheek1 = new THREE.Mesh(cheekGeo, cheekMat);
+            cheek1.position.set(0.24, 1.05, 0.48);
+            cheek1.scale.set(0.5, 1, 0.3);
+            chicken.add(cheek1);
+            const cheek2 = new THREE.Mesh(cheekGeo, cheekMat);
+            cheek2.position.set(-0.24, 1.05, 0.48);
+            cheek2.scale.set(0.5, 1, 0.3);
+            chicken.add(cheek2);
+
+            // 嘴巴(橙色小锥)
+            const beakGeo = new THREE.ConeGeometry(0.09, 0.18, 6);
+            const beakMat = new THREE.MeshStandardMaterial({ color: beakColor, roughness: 0.4 });
+            const beak = new THREE.Mesh(beakGeo, beakMat);
+            beak.position.set(0, 1.0, 0.65);
+            beak.rotation.x = Math.PI / 2;
+            chicken.add(beak);
+
+            // 翅膀(扁椭球,微微倾斜)
+            const wingGeo = new THREE.SphereGeometry(0.28, 16, 16);
+            const wingMat = new THREE.MeshStandardMaterial({ color: 0xffc107, roughness: 0.4 });
+            const wing1 = new THREE.Mesh(wingGeo, wingMat);
+            wing1.scale.set(0.35, 0.7, 1);
+            wing1.position.set(0.48, 0.6, 0);
+            wing1.rotation.z = -0.2;
+            chicken.add(wing1);
+            const wing2 = new THREE.Mesh(wingGeo, wingMat);
+            wing2.scale.set(0.35, 0.7, 1);
+            wing2.position.set(-0.48, 0.6, 0);
+            wing2.rotation.z = 0.2;
+            chicken.add(wing2);
+
+            // 两条腿(细圆柱),标记为腿用于讲解动画
+            const legGeo = new THREE.CylinderGeometry(0.035, 0.035, 0.4, 8);
+            const legMat = new THREE.MeshStandardMaterial({ color: beakColor, roughness: 0.4 });
+            const leg1 = new THREE.Mesh(legGeo, legMat);
+            leg1.position.set(0.15, 0.2, 0);
+            leg1.userData.isLeg = true;           // 标记为腿
+            leg1.userData.originalColor = beakColor;
+            leg1.userData.shouldLift = true;      // 鸡只有2条腿,全部抬起
+            leg1.userData.originalY = 0.2;        // 原始Y位置(动画用)
+            leg1.userData.originalHeight = 0.4;   // 原始高度(动画用)
+            chicken.add(leg1);
+            const leg2 = new THREE.Mesh(legGeo, legMat);
+            leg2.position.set(-0.15, 0.2, 0);
+            leg2.userData.isLeg = true;
+            leg2.userData.originalColor = beakColor;
+            leg2.userData.shouldLift = true;
+            leg2.userData.originalY = 0.2;
+            leg2.userData.originalHeight = 0.4;
+            chicken.add(leg2);
+
+            // 脚趾(小扁球),跟随腿一起抬起消失
+            const footGeo = new THREE.SphereGeometry(0.06, 8, 8);
+            const footMat = new THREE.MeshStandardMaterial({ color: beakColor, roughness: 0.4 });
+            const foot1 = new THREE.Mesh(footGeo, footMat);
+            foot1.scale.set(1, 0.3, 1.5);
+            foot1.position.set(0.15, 0.02, 0.04);
+            foot1.userData.isLeg = true;            // 标记为腿类(统一处理)
+            foot1.userData.isFoot = true;            // 标记为脚趾
+            foot1.userData.originalColor = beakColor;
+            foot1.userData.shouldLift = true;        // 跟随腿一起抬起
+            foot1.userData.originalScale = { x: 1, y: 0.3, z: 1.5 };
+            chicken.add(foot1);
+            const foot2 = new THREE.Mesh(footGeo, footMat);
+            foot2.scale.set(1, 0.3, 1.5);
+            foot2.position.set(-0.15, 0.02, 0.04);
+            foot2.userData.isLeg = true;
+            foot2.userData.isFoot = true;
+            foot2.userData.originalColor = beakColor;
+            foot2.userData.shouldLift = true;
+            foot2.userData.originalScale = { x: 1, y: 0.3, z: 1.5 };
+            chicken.add(foot2);
+
+            chicken.position.set(x, 0, z);
+            return chicken;
+        }
+
+        // ========== 创建兔子模型(可爱版) ==========
+        function createRabbit(x, z) {
+            const rabbit = new THREE.Group();
+            const bodyColor = 0xe8d5e8;      // 柔和浅紫
+            const earColor = 0xffb3c1;       // 内耳粉色
+            const noseColor = 0xff6b9d;      // 鼻子粉色
+            const cheekColor = 0xffb3ba;     // 腮红
+
+            // 身体(圆润椭球)
+            const bodyGeo = new THREE.SphereGeometry(0.65, 24, 24);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.5, metalness: 0.05 });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.scale.set(1, 0.9, 1.25);
+            body.position.y = 0.75;
+            body.castShadow = true;
+            rabbit.add(body);
+
+            // 头部(大圆球)
+            const headGeo = new THREE.SphereGeometry(0.42, 24, 24);
+            const headMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.5, metalness: 0.05 });
+            const head = new THREE.Mesh(headGeo, headMat);
+            head.position.set(0, 1.25, 0.4);
+            head.castShadow = true;
+            rabbit.add(head);
+
+            // 长耳朵(外耳)
+            const earGeo = new THREE.CapsuleGeometry(0.1, 0.55, 8, 12);
+            const earMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.5 });
+            const ear1 = new THREE.Mesh(earGeo, earMat);
+            ear1.position.set(0.15, 1.75, 0.35);
+            ear1.rotation.z = -0.15;
+            ear1.castShadow = true;
+            rabbit.add(ear1);
+            const ear2 = new THREE.Mesh(earGeo, earMat);
+            ear2.position.set(-0.15, 1.75, 0.35);
+            ear2.rotation.z = 0.15;
+            ear2.castShadow = true;
+            rabbit.add(ear2);
+
+            // 内耳(粉色)
+            const innerEarGeo = new THREE.CapsuleGeometry(0.05, 0.4, 6, 8);
+            const innerEarMat = new THREE.MeshStandardMaterial({ color: earColor, roughness: 0.4 });
+            const innerEar1 = new THREE.Mesh(innerEarGeo, innerEarMat);
+            innerEar1.position.set(0.15, 1.77, 0.4);
+            innerEar1.rotation.z = -0.15;
+            rabbit.add(innerEar1);
+            const innerEar2 = new THREE.Mesh(innerEarGeo, innerEarMat);
+            innerEar2.position.set(-0.15, 1.77, 0.4);
+            innerEar2.rotation.z = 0.15;
+            rabbit.add(innerEar2);
+
+            // 眼睛(黑色大球)
+            const eyeGeo = new THREE.SphereGeometry(0.08, 16, 16);
+            const eyeMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
+            const eye1 = new THREE.Mesh(eyeGeo, eyeMat);
+            eye1.position.set(0.2, 1.3, 0.72);
+            rabbit.add(eye1);
+            const eye2 = new THREE.Mesh(eyeGeo, eyeMat);
+            eye2.position.set(-0.2, 1.3, 0.72);
+            rabbit.add(eye2);
+
+            // 眼睛高光(白色小点)
+            const hlGeo = new THREE.SphereGeometry(0.03, 8, 8);
+            const hlMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+            const hl1 = new THREE.Mesh(hlGeo, hlMat);
+            hl1.position.set(0.22, 1.33, 0.79);
+            rabbit.add(hl1);
+            const hl2 = new THREE.Mesh(hlGeo, hlMat);
+            hl2.position.set(-0.18, 1.33, 0.79);
+            rabbit.add(hl2);
+
+            // 脸颊腮红(半透明粉色)
+            const cheekGeo = new THREE.SphereGeometry(0.1, 12, 12);
+            const cheekMat = new THREE.MeshStandardMaterial({ color: cheekColor, transparent: true, opacity: 0.5 });
+            const cheek1 = new THREE.Mesh(cheekGeo, cheekMat);
+            cheek1.position.set(0.3, 1.18, 0.6);
+            cheek1.scale.set(0.5, 1, 0.3);
+            rabbit.add(cheek1);
+            const cheek2 = new THREE.Mesh(cheekGeo, cheekMat);
+            cheek2.position.set(-0.3, 1.18, 0.6);
+            cheek2.scale.set(0.5, 1, 0.3);
+            rabbit.add(cheek2);
+
+            // 鼻子(粉色小球)
+            const noseGeo = new THREE.SphereGeometry(0.06, 12, 12);
+            const noseMat = new THREE.MeshStandardMaterial({ color: noseColor, roughness: 0.3 });
+            const nose = new THREE.Mesh(noseGeo, noseMat);
+            nose.position.set(0, 1.15, 0.82);
+            nose.scale.set(1.2, 0.9, 0.8);
+            rabbit.add(nose);
+
+            // 尾巴(白色蓬松球)
+            const tailGeo = new THREE.SphereGeometry(0.22, 16, 16);
+            const tailMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8 });
+            const tail = new THREE.Mesh(tailGeo, tailMat);
+            tail.position.set(0, 0.85, -0.75);
+            rabbit.add(tail);
+
+            // 四条腿(锥形圆柱,上粗下细),标记为腿用于讲解动画
+            const legGeo = new THREE.CylinderGeometry(0.09, 0.07, 0.5, 12);
+            const legMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.5 });
+            // 前腿(抬腿法中抬起)
+            const leg1 = new THREE.Mesh(legGeo, legMat);
+            leg1.position.set(0.22, 0.25, 0.55);
+            leg1.userData.isLeg = true;           // 标记为腿
+            leg1.userData.originalColor = bodyColor;
+            leg1.userData.shouldLift = true;      // 前腿1,抬起
+            leg1.userData.originalY = 0.25;       // 原始Y位置(动画用)
+            leg1.userData.originalHeight = 0.5;   // 原始高度(动画用)
+            rabbit.add(leg1);
+            const leg2 = new THREE.Mesh(legGeo, legMat);
+            leg2.position.set(-0.22, 0.25, 0.55);
+            leg2.userData.isLeg = true;
+            leg2.userData.originalColor = bodyColor;
+            leg2.userData.shouldLift = true;      // 前腿2,抬起
+            leg2.userData.originalY = 0.25;
+            leg2.userData.originalHeight = 0.5;
+            rabbit.add(leg2);
+            // 后腿(抬腿法中不抬起,留在地上)
+            const leg3 = new THREE.Mesh(legGeo, legMat);
+            leg3.position.set(0.26, 0.25, -0.35);
+            leg3.userData.isLeg = true;
+            leg3.userData.originalColor = bodyColor;
+            leg3.userData.shouldLift = false;     // 后腿1,留在地上
+            rabbit.add(leg3);
+            const leg4 = new THREE.Mesh(legGeo, legMat);
+            leg4.position.set(-0.26, 0.25, -0.35);
+            leg4.userData.isLeg = true;
+            leg4.userData.originalColor = bodyColor;
+            leg4.userData.shouldLift = false;     // 后腿2,留在地上
+            rabbit.add(leg4);
+
+            rabbit.position.set(x, 0, z);
+            return rabbit;
+        }
+
+        // ========== 更新动物显示 ==========
+        function updateAnimals() {
+            // 清除现有动物
+            while (chickenGroup.children.length > 0) {
+                chickenGroup.remove(chickenGroup.children[0]);
+            }
+            while (rabbitGroup.children.length > 0) {
+                rabbitGroup.remove(rabbitGroup.children[0]);
+            }
+
+            // 计算位置(网格排列)
+            const positions = generatePositions(chickens + rabbits);
+            const chickenPositions = positions.slice(0, chickens);
+            const rabbitPositions = positions.slice(chickens);
+
+            // 生成鸡
+            chickenPositions.forEach((pos) => {
+                const chicken = createChicken(pos.x, pos.z);
+                chickenGroup.add(chicken);
+            });
+
+            // 生成兔子
+            rabbitPositions.forEach((pos) => {
+                const rabbit = createRabbit(pos.x, pos.z);
+                rabbitGroup.add(rabbit);
+            });
+
+            // 更新信息面板
+            updateInfo();
+
+            // 重置讲解步骤(因为动物数量变了)
+            tutorialStep = 0;
+            updateTutorialContent();
+        }
+
+        // ========== 生成动物位置(网格排列) ==========
+        function generatePositions(count) {
+            const positions = [];
+            const spacing = 2;
+            const cols = Math.ceil(Math.sqrt(count));
+            const rows = Math.ceil(count / cols);
+            let idx = 0;
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols && idx < count; col++) {
+                    const x = (col - (cols - 1) / 2) * spacing;
+                    const z = (row - (rows - 1) / 2) * spacing;
+                    positions.push({ x, z });
+                    idx++;
+                }
+            }
+            return positions;
+        }
+
+        // ========== 更新信息面板 ==========
+        function updateInfo() {
+            const totalHeads = chickens + rabbits;
+            const totalLegs = chickens * 2 + rabbits * 4;
+            document.getElementById('chicken-count').textContent = chickens;
+            document.getElementById('rabbit-count').textContent = rabbits;
+            document.getElementById('head-count').textContent = totalHeads;
+            document.getElementById('leg-count').textContent = totalLegs;
+            document.getElementById('chicken-display').textContent = chickens;
+            document.getElementById('rabbit-display').textContent = rabbits;
+        }
+
+        // ========== 按钮交互函数 ==========
+        function changeChicken(delta) {
+            chickens = Math.max(0, Math.min(MAX_ANIMALS, chickens + delta));
+            updateAnimals();
+        }
+
+        function changeRabbit(delta) {
+            rabbits = Math.max(0, Math.min(MAX_ANIMALS, rabbits + delta));
+            updateAnimals();
+        }
+
+        // ========== 教学讲解功能(抬腿法) ==========
+
+        // 获取当前讲解步骤的内容
+        function getTutorialContent(step) {
+            // 根据当前鸡兔数量动态计算
+            const H = chickens + rabbits;        // 总头数
+            const L = chickens * 2 + rabbits * 4; // 总腿数
+            const lifted = H * 2;                 // 抬起的腿数
+            const remaining = L - lifted;         // 剩余腿数
+            const rabbitAns = remaining / 2;      // 兔子数
+            const chickenAns = H - rabbitAns;     // 鸡数
+
+            switch(step) {
+                case 0:
+                    return `<p style="text-align:center;font-size:18px;">小朋友,我们一起来学习<br><b style="color:#6c5ce7;">"抬腿法"</b>解决鸡兔同笼问题吧!👇</p>`;
+                case 1:
+                    return `<span class="step-number">1</span><b>数一数</b><br>
+                        笼子里一共有:<br>
+                        <div class="formula-box">
+                        🐔+🐰 头数 = <span class="highlight">${H}</span> 个<br>
+                        🦵 腿数 = <span class="highlight">${L}</span> 条
+                        </div>`;
+                case 2:
+                    return `<span class="step-number">2</span><b>认一认</b><br>
+                        <div class="formula-box">
+                        🐔 小鸡有 <span class="highlight">2</span> 条腿<br>
+                        🐰 兔子有 <span class="highlight">4</span> 条腿
+                        </div>
+                        小鸡比兔子少 <span class="highlight-blue">2</span> 条腿哦~`;
+                case 3:
+                    return `<span class="step-number">3</span><b>抬腿法:让所有动物抬起2条腿!</b><br>
+                        <div class="formula-box">
+                        ${H} 个头 × 2 = <span class="highlight">${lifted}</span> 条腿
+                        </div>
+                        <span style="color:#e17055;">🔴 红色的腿就是抬起来的!</span><br>
+                        🐔 小鸡2条腿全抬完了<br>
+                        🐰 兔子抬2条,还剩2条在地上`;
+                case 4:
+                    return `<span class="step-number">4</span><b>抬起来的腿不见了!</b><br>
+                        <div class="formula-box">
+                        ✨ 红色的腿慢慢消失了~
+                        </div>
+                        🐔 小鸡的腿全没了<br>
+                        🐰 兔子还剩 <span class="highlight">2</span> 条腿站着`;
+                case 5:
+                    return `<span class="step-number">5</span><b>数一数剩下的腿</b><br>
+                        <div class="formula-box">
+                        ${L} - ${lifted} = <span class="highlight">${remaining}</span> 条腿
+                        </div>
+                        💡 这些腿都是<b style="color:#a29bfe;">兔子</b>的!<br>
+                        (小鸡抬完2条腿就没了,兔子还剩2条腿在地上)`;
+                case 6:
+                    return `<span class="step-number">6</span><b>算兔子有几只</b><br>
+                        <div class="formula-box">
+                        ${remaining} ÷ 2 = <span class="highlight-green">${rabbitAns}</span> 只兔子 🐰
+                        </div>`;
+                case 7:
+                    return `<span class="step-number">7</span><b>算小鸡有几只</b><br>
+                        <div class="formula-box">
+                        ${H} - ${rabbitAns} = <span class="highlight-green">${chickenAns}</span> 只小鸡 🐔
+                        </div>`;
+                case 8:
+                    return `<span class="step-number">✓</span><b>验证一下</b><br>
+                        <div class="formula-box">
+                        ${rabbitAns}×4 + ${chickenAns}×2<br>
+                        = ${rabbitAns*4} + ${chickenAns*2}<br>
+                        = <span class="highlight-green">${L}</span> 条腿 ✓
+                        </div>
+                        <p style="text-align:center;color:#00b894;font-size:20px;"><b>🎉 答对了!太棒了!</b></p>`;
+                default:
+                    return '';
+            }
+        }
+
+        // 更新讲解内容显示
+        function updateTutorialContent() {
+            document.getElementById('tutorial-step-content').innerHTML = getTutorialContent(tutorialStep);
+            const btn = document.getElementById('tutorial-next-btn');
+            if (tutorialStep === 0) {
+                btn.textContent = '开始讲解 →';
+            } else if (tutorialStep < TOTAL_STEPS) {
+                btn.textContent = '下一步 →';
+            } else {
+                btn.textContent = '🔄 重新讲解';
+            }
+
+            // 控制腿部效果
+            // 步骤0-2:正常(原色) / 步骤3:腿变红 / 步骤4:腿消失动画 / 步骤5+:腿隐藏
+            if (tutorialStep <= 2) {
+                setLegsState('normal');
+            } else if (tutorialStep === 3) {
+                setLegsState('red');
+            } else if (tutorialStep === 4) {
+                setLegsState('disappear');
+            } else {
+                setLegsState('hidden');
+            }
+        }
+
+        // 下一步讲解
+        function nextTutorialStep() {
+            if (tutorialStep < TOTAL_STEPS) {
+                tutorialStep++;
+            } else {
+                // 重新讲解
+                tutorialStep = 0;
+            }
+            updateTutorialContent();
+        }
+
+        // 显示教学面板
+        function showTutorial() {
+            document.getElementById('tutorial-panel').style.display = 'block';
+            document.getElementById('show-tutorial-btn').style.display = 'none';
+        }
+
+        // 隐藏教学面板
+        function hideTutorial() {
+            document.getElementById('tutorial-panel').style.display = 'none';
+            document.getElementById('show-tutorial-btn').style.display = 'block';
+        }
+
+        // ========== 腿部状态控制(讲解时使用) ==========
+        // 状态说明:
+        //   normal    - 原色,正常大小,可见
+        //   red       - 红色,正常大小,可见
+        //   disappear - 红色,启动缩小消失动画
+        //   hidden    - 直接隐藏
+        // 注意:腿(isFoot=false)沿Y轴缩放保持顶部固定;脚趾(isFoot=true)整体缩放
+        let legAnimTimer = null;  // 腿部动画定时器
+
+        function setLegsState(state) {
+            // 清除正在进行的动画
+            if (legAnimTimer) {
+                clearInterval(legAnimTimer);
+                legAnimTimer = null;
+            }
+
+            // 先设置所有腿和脚趾的初始状态
+            [chickenGroup, rabbitGroup].forEach(group => {
+                group.children.forEach(animal => {
+                    animal.traverse(child => {
+                        if (child.isMesh && child.userData.isLeg && child.userData.shouldLift) {
+                            const isFoot = child.userData.isFoot;
+                            const os = child.userData.originalScale;
+                            switch(state) {
+                                case 'normal':
+                                    // 恢复原色和大小
+                                    child.material = new THREE.MeshStandardMaterial({
+                                        color: child.userData.originalColor,
+                                        roughness: 0.4
+                                    });
+                                    if (isFoot) {
+                                        child.scale.set(os.x, os.y, os.z);
+                                    } else {
+                                        child.scale.y = 1;
+                                        child.position.y = child.userData.originalY;
+                                    }
+                                    child.visible = true;
+                                    break;
+                                case 'red':
+                                    // 腿/脚趾变红色
+                                    child.material = new THREE.MeshStandardMaterial({
+                                        color: 0xe74c3c,
+                                        roughness: 0.4
+                                    });
+                                    if (isFoot) {
+                                        child.scale.set(os.x, os.y, os.z);
+                                    } else {
+                                        child.scale.y = 1;
+                                        child.position.y = child.userData.originalY;
+                                    }
+                                    child.visible = true;
+                                    break;
+                                case 'disappear':
+                                    // 准备消失动画:先设为红色
+                                    child.material = new THREE.MeshStandardMaterial({
+                                        color: 0xe74c3c,
+                                        roughness: 0.4
+                                    });
+                                    if (isFoot) {
+                                        child.scale.set(os.x, os.y, os.z);
+                                    } else {
+                                        child.scale.y = 1;
+                                        child.position.y = child.userData.originalY;
+                                    }
+                                    child.visible = true;
+                                    break;
+                                case 'hidden':
+                                    // 直接隐藏
+                                    child.visible = false;
+                                    break;
+                            }
+                        }
+                    });
+                });
+            });
+
+            // 如果是消失状态,启动缩小动画
+            // 腿从底部向上缩小,脚趾整体缩小,模拟"抬起消失"的效果
+            if (state === 'disappear') {
+                let progress = 1.0;  // 缩放比例,从1减到0
+                legAnimTimer = setInterval(() => {
+                    progress -= 0.08;
+                    if (progress <= 0) {
+                        progress = 0;
+                        clearInterval(legAnimTimer);
+                        legAnimTimer = null;
+                    }
+                    [chickenGroup, rabbitGroup].forEach(group => {
+                        group.children.forEach(animal => {
+                            animal.traverse(child => {
+                                if (child.isMesh && child.userData.isLeg && child.userData.shouldLift) {
+                                    if (child.userData.isFoot) {
+                                        // 脚趾整体按比例缩小
+                                        const os = child.userData.originalScale;
+                                        child.scale.set(os.x * progress, os.y * progress, os.z * progress);
+                                    } else {
+                                        // 腿沿Y轴缩小,保持顶部位置不变
+                                        child.scale.y = progress;
+                                        child.position.y = child.userData.originalY +
+                                            child.userData.originalHeight * (1 - progress) / 2;
+                                    }
+                                }
+                            });
+                        });
+                    });
+                }, 30);  // 每30ms更新一次,约0.4秒完成动画
+            }
+        }
+
+        // ========== 窗口大小自适应 ==========
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // ========== 动画循环 ==========
+        function animate() {
+            requestAnimationFrame(animate);
+            // 让动物轻微上下浮动,增加生动感
+            const time = Date.now() * 0.002;
+            chickenGroup.children.forEach((chicken, i) => {
+                chicken.position.y = Math.sin(time + i) * 0.1;
+            });
+            rabbitGroup.children.forEach((rabbit, i) => {
+                rabbit.position.y = Math.sin(time + i + 1) * 0.08;
+            });
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // 启动应用
+        init();
+        animate();
+    </script>
+</body>
+</html>

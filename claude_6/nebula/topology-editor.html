@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NebulaGraph 拓扑图编辑器</title>
+    <!-- Cytoscape.js 核心库 -->
+    <script src="https://unpkg.com/cytoscape@3.28.1/dist/cytoscape.min.js"></script>
+    <!-- Dagre 图布局库 -->
+    <script src="https://unpkg.com/dagre@0.8.5/dist/dagre.min.js"></script>
+    <!-- Cytoscape Dagre 布局插件 -->
+    <script src="https://unpkg.com/cytoscape-dagre@2.5.0/cytoscape-dagre.js"></script>
+    <!-- 文件保存库 -->
+    <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <style>
+        /* ========== 全局样式 ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: #f0f2f5;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ========== 顶部工具栏 ========== */
+        .toolbar {
+            background: #1a1a2e;
+            color: #fff;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .toolbar .logo {
+            font-size: 18px;
+            font-weight: 700;
+            margin-right: 16px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .toolbar .btn {
+            padding: 7px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .toolbar .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        .btn-primary {
+            background: #667eea;
+            color: #fff;
+        }
+        .btn-success {
+            background: #2ecc71;
+            color: #fff;
+        }
+        .btn-danger {
+            background: #e74c3c;
+            color: #fff;
+        }
+        .btn-warning {
+            background: #f39c12;
+            color: #fff;
+        }
+        .btn-info {
+            background: #3498db;
+            color: #fff;
+        }
+        .toolbar .separator {
+            width: 1px;
+            height: 28px;
+            background: rgba(255,255,255,0.2);
+        }
+        .toolbar .status-text {
+            font-size: 12px;
+            color: rgba(255,255,255,0.7);
+            margin-left: auto;
+        }
+
+        /* ========== 主体区域 ========== */
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* ========== 左侧面板 ========== */
+        .left-panel {
+            width: 210px;
+            background: #fff;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            overflow-y: auto;
+        }
+        .panel-section {
+            padding: 12px 14px;
+            border-bottom: 1px solid #eee;
+        }
+        .panel-section h3 {
+            font-size: 13px;
+            color: #333;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .panel-section h3 .badge {
+            font-size: 11px;
+            background: #667eea;
+            color: #fff;
+            border-radius: 10px;
+            padding: 0 8px;
+            font-weight: 400;
+        }
+
+        /* 拖拽节点 */
+        .draggable-node {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 10px;
+            margin-bottom: 6px;
+            border-radius: 6px;
+            cursor: grab;
+            font-size: 13px;
+            font-weight: 500;
+            user-select: none;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        .draggable-node:hover {
+            transform: translateX(3px);
+        }
+        .draggable-node:active {
+            cursor: grabbing;
+        }
+        .draggable-node .node-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #fff;
+            flex-shrink: 0;
+        }
+        .node-type-alarm .node-icon {
+            background: #e74c3c;
+        }
+        .node-type-ne .node-icon {
+            background: #3498db;
+        }
+        .node-type-board .node-icon {
+            background: #2ecc71;
+        }
+        .node-type-port .node-icon {
+            background: #f39c12;
+        }
+
+        /* 边类型选择 */
+        .edge-type-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            margin-bottom: 4px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        .edge-type-item:hover {
+            background: #f5f5f5;
+        }
+        .edge-type-item.active {
+            border-color: #667eea;
+            background: #f0f0ff;
+        }
+        .edge-type-item .edge-line {
+            width: 28px;
+            height: 4px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+        .edge-type-item .edge-line.trigger { background: #e74c3c; }
+        .edge-type-item .edge-line.link { background: #9b59b6; }
+        .edge-type-item .edge-line.leave { background: #2ecc71; }
+        .edge-type-item .edge-line.happen { background: #e67e22; }
+        .edge-type-item .edge-line.enhance { background: #1abc9c; }
+        .edge-type-item .edge-label {
+            font-size: 11px;
+            color: #999;
+        }
+
+        /* ========== 中间画布 ========== */
+        .canvas-area {
+            flex: 1;
+            position: relative;
+            background: #fafbfc;
+        }
+        #cy {
+            width: 100%;
+            height: 100%;
+        }
+        /* 连线模式提示 */
+        .connect-mode-bar {
+            display: none;
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #667eea;
+            color: #fff;
+            padding: 6px 20px;
+            border-radius: 20px;
+            font-size: 13px;
+            z-index: 10;
+            box-shadow: 0 2px 10px rgba(102,126,234,0.4);
+            align-items: center;
+            gap: 10px;
+        }
+        .connect-mode-bar.visible {
+            display: flex;
+        }
+        .connect-mode-bar .btn-sm {
+            padding: 3px 12px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 12px;
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+        }
+        .connect-mode-bar .btn-sm:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* ========== 右侧属性面板 ========== */
+        .right-panel {
+            width: 280px;
+            background: #fff;
+            border-left: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            overflow-y: auto;
+        }
+        .right-panel .panel-section {
+            border-bottom: 1px solid #eee;
+        }
+        .prop-group {
+            margin-bottom: 10px;
+        }
+        .prop-group label {
+            display: block;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 3px;
+            font-weight: 500;
+        }
+        .prop-group input,
+        .prop-group select,
+        .prop-group textarea {
+            width: 100%;
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .prop-group input:focus,
+        .prop-group select:focus,
+        .prop-group textarea:focus {
+            border-color: #667eea;
+        }
+        .prop-group textarea {
+            resize: vertical;
+            min-height: 50px;
+        }
+
+        .no-selection {
+            text-align: center;
+            color: #ccc;
+            padding: 40px 20px;
+            font-size: 14px;
+        }
+        .no-selection .icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        /* ========== 底部SQL输出 ========== */
+        .sql-output {
+            background: #1e1e2e;
+            color: #a8e6cf;
+            padding: 0;
+            flex-shrink: 0;
+            max-height: 200px;
+            display: flex;
+            flex-direction: column;
+        }
+        .sql-output .sql-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 16px;
+            background: #2a2a3e;
+            color: #ccc;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .sql-output .sql-header .btn-sm {
+            padding: 3px 12px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 4px;
+            background: transparent;
+            color: #ccc;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .sql-output .sql-header .btn-sm:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        .sql-output pre {
+            padding: 12px 16px;
+            margin: 0;
+            overflow-y: auto;
+            font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            flex: 1;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        /* ========== 滚动条 ========== */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #aaa; }
+
+        /* ========== Toast 通知 ========== */
+        .toast {
+            position: fixed;
+            bottom: 220px;
+            right: 20px;
+            background: #333;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            z-index: 9999;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s;
+        }
+        .toast.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .toast.success { background: #2ecc71; }
+        .toast.error { background: #e74c3c; }
+        .toast.info { background: #3498db; }
+    </style>
+</head>
+<body>
+
+    <!-- ========== 顶部工具栏 ========== -->
+    <div class="toolbar">
+        <div class="logo">NebulaTopo</div>
+        <button class="btn btn-primary" onclick="autoLayout()">自动布局</button>
+        <button class="btn btn-success" onclick="generateSQL()">生成 SQL</button>
+        <button class="btn btn-info" onclick="exportImage()">导出图片</button>
+        <button class="btn btn-warning" onclick="loadSample()">加载示例</button>
+        <button class="btn btn-danger" onclick="clearGraph()">清空</button>
+        <div class="separator"></div>
+        <button class="btn btn-primary" onclick="showHelp()">帮助</button>
+        <span class="status-text" id="statusText">就绪 · 节点: 0 · 边: 0</span>
+    </div>
+
+    <!-- ========== 主体区域 ========== -->
+    <div class="main-container">
+
+        <!-- 左侧面板 -->
+        <div class="left-panel">
+            <!-- 节点类型 -->
+            <div class="panel-section">
+                <h3>节点类型 <span class="badge">拖拽到画布</span></h3>
+                <div class="draggable-node node-type-alarm" draggable="true" data-type="alarm">
+                    <div class="node-icon">!</div>
+                    <span>告警 (alarm)</span>
+                </div>
+                <div class="draggable-node node-type-ne" draggable="true" data-type="ne">
+                    <div class="node-icon">N</div>
+                    <span>网元 (ne)</span>
+                </div>
+                <div class="draggable-node node-type-board" draggable="true" data-type="board">
+                    <div class="node-icon">B</div>
+                    <span>单板 (board)</span>
+                </div>
+                <div class="draggable-node node-type-port" draggable="true" data-type="port">
+                    <div class="node-icon">P</div>
+                    <span>端口 (port)</span>
+                </div>
+            </div>
+
+            <!-- 边类型 -->
+            <div class="panel-section">
+                <h3>边类型 <span class="badge">点击选择</span></h3>
+                <div class="edge-type-item" data-type="trigger" onclick="selectEdgeType('trigger')">
+                    <div class="edge-line trigger"></div>
+                    <span>trigger <span class="edge-label">告警→告警</span></span>
+                </div>
+                <div class="edge-type-item" data-type="link" onclick="selectEdgeType('link')">
+                    <div class="edge-line link"></div>
+                    <span>link <span class="edge-label">设备↔设备</span></span>
+                </div>
+                <div class="edge-type-item" data-type="leave" onclick="selectEdgeType('leave')">
+                    <div class="edge-line leave"></div>
+                    <span>leave <span class="edge-label">父设备→子设备</span></span>
+                </div>
+                <div class="edge-type-item" data-type="happen" onclick="selectEdgeType('happen')">
+                    <div class="edge-line happen"></div>
+                    <span>happen <span class="edge-label">告警→设备</span></span>
+                </div>
+                <div class="edge-type-item" data-type="enhance" onclick="selectEdgeType('enhance')">
+                    <div class="edge-line enhance"></div>
+                    <span>enhance <span class="edge-label">告警→子设备</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 中间画布 -->
+        <div class="canvas-area">
+            <div id="cy"></div>
+            <!-- 连线模式提示 -->
+            <div class="connect-mode-bar" id="connectModeBar">
+                <span id="connectModeText">连线模式: 点击源节点 → 点击目标节点</span>
+                <button class="btn-sm" onclick="cancelConnectMode()">取消</button>
+            </div>
+        </div>
+
+        <!-- 右侧属性面板 -->
+        <div class="right-panel" id="rightPanel">
+            <div class="panel-section">
+                <h3>属性编辑</h3>
+                <div class="no-selection" id="noSelection">
+                    <div class="icon">◈</div>
+                    <p>点击画布中的节点或边<br>查看/编辑属性</p>
+                </div>
+                <div id="propEditor" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== 底部SQL输出 ========== -->
+    <div class="sql-output">
+        <div class="sql-header">
+            <span>NebulaGraph INSERT 语句</span>
+            <div>
+                <button class="btn-sm" onclick="copySQL()">复制</button>
+                <button class="btn-sm" onclick="clearSQL()">清空</button>
+            </div>
+        </div>
+        <pre id="sqlContent">-- 在画布中创建拓扑图后，点击"生成 SQL"按钮查看 INSERT 语句</pre>
+    </div>
+
+    <!-- ========== Toast ========== -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ================================================================
+        // 1. 数据模型定义 - 基于 NebulaGraph 告警拓扑模型
+        // ================================================================
+
+        /** 节点类型的属性定义 */
+        const NODE_CONFIG = {
+            alarm: {
+                label: '告警',
+                color: '#e74c3c',
+                shape: 'ellipse',
+                props: {
+                    name: { label: '告警名称', type: 'text', default: '' },
+                    level: { label: '告警级别', type: 'select', default: 'warning',
+                             options: ['critical', 'warning', 'info'] },
+                    content: { label: '告警内容', type: 'textarea', default: '' }
+                }
+            },
+            ne: {
+                label: '网元',
+                color: '#3498db',
+                shape: 'roundrectangle',
+                props: {
+                    name: { label: '网元名称', type: 'text', default: '' },
+                    type: { label: '网元类型', type: 'select', default: 'router',
+                             options: ['router', 'switch', 'firewall', 'server'] },
+                    ip: { label: '管理IP', type: 'text', default: '' }
+                }
+            },
+            board: {
+                label: '单板',
+                color: '#2ecc71',
+                shape: 'roundrectangle',
+                props: {
+                    name: { label: '单板名称', type: 'text', default: '' },
+                    slot_id: { label: '槽位号', type: 'number', default: 1 }
+                }
+            },
+            port: {
+                label: '端口',
+                color: '#f39c12',
+                shape: 'roundrectangle',
+                props: {
+                    name: { label: '端口名称', type: 'text', default: '' },
+                    speed: { label: '端口速率', type: 'select', default: '10G',
+                              options: ['1G', '10G', '25G', '40G', '100G'] },
+                    status: { label: '端口状态', type: 'select', default: 'up',
+                              options: ['up', 'down'] }
+                }
+            }
+        };
+
+        /** 边类型的属性定义 */
+        const EDGE_CONFIG = {
+            trigger: {
+                label: 'trigger',
+                color: '#e74c3c',
+                style: 'solid',
+                props: {
+                    relation_type: { label: '关联类型', type: 'select', default: 'derived',
+                                     options: ['derived', 'related'] },
+                    weight: { label: '关联权重', type: 'number', default: 1.0 }
+                }
+            },
+            link: {
+                label: 'link',
+                color: '#9b59b6',
+                style: 'dashed',
+                props: {
+                    bandwidth: { label: '链路带宽', type: 'text', default: '' },
+                    media_type: { label: '介质类型', type: 'select', default: 'fiber',
+                                  options: ['fiber', 'copper'] }
+                }
+            },
+            leave: {
+                label: 'leave',
+                color: '#2ecc71',
+                style: 'dotted',
+                props: {
+                    relation: { label: '父子关系', type: 'select', default: 'parent',
+                                options: ['parent', 'child'] }
+                }
+            },
+            happen: {
+                label: 'happen',
+                color: '#e67e22',
+                style: 'solid',
+                props: {
+                    reason: { label: '故障原因', type: 'text', default: '' },
+                    is_root: { label: '是否根因', type: 'select', default: 1,
+                              options: [1, 0] }
+                }
+            },
+            enhance: {
+                label: 'enhance',
+                color: '#1abc9c',
+                style: 'dashed',
+                props: {
+                    impact_level: { label: '影响级别', type: 'number', default: 1 }
+                }
+            }
+        };
+
+        // ================================================================
+        // 2. Cytoscape 初始化
+        // ================================================================
+
+        const cy = cytoscape({
+            container: document.getElementById('cy'),
+            style: [
+                {
+                    selector: 'node',
+                    style: {
+                        'label': 'data(label)',
+                        'font-size': '12px',
+                        'font-weight': 'bold',
+                        'text-valign': 'center',
+                        'text-halign': 'center',
+                        'text-wrap': 'wrap',
+                        'text-max-width': '100px',
+                        'color': '#333',
+                        'border-width': 2,
+                        'border-color': '#fff'
+                    }
+                },
+                {
+                    selector: 'node[nodeType="alarm"]',
+                    style: {
+                        'shape': 'diamond',
+                        'background-color': '#e74c3c',
+                        'width': 70,
+                        'height': 70,
+                        'color': '#fff',
+                        'border-color': '#c0392b',
+                        'border-width': 3
+                    }
+                },
+                {
+                    selector: 'node[nodeType="ne"]',
+                    style: {
+                        'shape': 'roundrectangle',
+                        'background-color': '#3498db',
+                        'width': 100,
+                        'height': 50,
+                        'color': '#fff',
+                        'border-color': '#2980b9'
+                    }
+                },
+                {
+                    selector: 'node[nodeType="board"]',
+                    style: {
+                        'shape': 'roundrectangle',
+                        'background-color': '#2ecc71',
+                        'width': 90,
+                        'height': 46,
+                        'color': '#fff',
+                        'border-color': '#27ae60'
+                    }
+                },
+                {
+                    selector: 'node[nodeType="port"]',
+                    style: {
+                        'shape': 'roundrectangle',
+                        'background-color': '#f39c12',
+                        'width': 90,
+                        'height': 46,
+                        'color': '#fff',
+                        'border-color': '#e67e22'
+                    }
+                },
+                {
+                    selector: 'edge',
+                    style: {
+                        'width': 3,
+                        'line-color': '#999',
+                        'target-arrow-color': '#999',
+                        'target-arrow-shape': 'triangle',
+                        'arrow-scale': 1.2,
+                        'curve-style': 'bezier',
+                        'label': 'data(edgeType)',
+                        'font-size': '11px',
+                        'font-weight': 'bold',
+                        'text-background-color': '#fff',
+                        'text-background-opacity': 1,
+                        'text-background-padding': '3px',
+                        'color': '#666'
+                    }
+                },
+                {
+                    selector: 'edge[edgeType="trigger"]',
+                    style: { 'line-color': '#e74c3c', 'target-arrow-color': '#e74c3c' }
+                },
+                {
+                    selector: 'edge[edgeType="link"]',
+                    style: {
+                        'line-color': '#9b59b6',
+                        'target-arrow-color': '#9b59b6',
+                        'line-style': 'dashed'
+                    }
+                },
+                {
+                    selector: 'edge[edgeType="leave"]',
+                    style: {
+                        'line-color': '#2ecc71',
+                        'target-arrow-color': '#2ecc71',
+                        'line-style': 'dotted'
+                    }
+                },
+                {
+                    selector: 'edge[edgeType="happen"]',
+                    style: { 'line-color': '#e67e22', 'target-arrow-color': '#e67e22' }
+                },
+                {
+                    selector: 'edge[edgeType="enhance"]',
+                    style: {
+                        'line-color': '#1abc9c',
+                        'target-arrow-color': '#1abc9c',
+                        'line-style': 'dashed'
+                    }
+                },
+                {
+                    selector: ':selected',
+                    style: {
+                        'border-color': '#667eea',
+                        'border-width': 3
+                    }
+                }
+            ],
+            layout: { name: 'grid', rows: 1 },
+            userZoomingEnabled: true,
+            userPanningEnabled: true,
+            minZoom: 0.3,
+            maxZoom: 3
+        });
+
+        // ================================================================
+        // 3. 状态管理
+        // ================================================================
+
+        /** 当前选中的边类型（连线模式） */
+        let currentEdgeType = null;
+        /** 连线模式：源节点 */
+        let connectSourceNode = null;
+        /** 是否处于连线模式 */
+        let isConnectMode = false;
+        /** 节点计数器（用于生成唯一ID） */
+        let nodeCounter = { alarm: 0, ne: 0, board: 0, port: 0 };
+
+        // ================================================================
+        // 4. 拖拽支持 - 从左侧面板拖拽到画布
+        // ================================================================
+
+        document.querySelectorAll('.draggable-node').forEach(el => {
+            el.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', el.dataset.type);
+                e.dataTransfer.effectAllowed = 'copy';
+            });
+        });
+
+        document.getElementById('cy').addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy';
+        });
+
+        document.getElementById('cy').addEventListener('drop', (e) => {
+            e.preventDefault();
+            const nodeType = e.dataTransfer.getData('text/plain');
+            if (!nodeType || !NODE_CONFIG[nodeType]) return;
+
+            const rect = cy.container().getBoundingClientRect();
+            const position = {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
+            };
+            // 转换为画布坐标（手动计算）
+            const zoom = cy.zoom();
+            const pan = cy.pan();
+            const modelPos = {
+                x: (position.x - pan.x) / zoom,
+                y: (position.y - pan.y) / zoom
+            };
+            createNode(nodeType, modelPos);
+        });
+
+        // ================================================================
+        // 5. 节点创建
+        // ================================================================
+
+        /**
+         * 创建一个节点
+         * @param {string} type - 节点类型 (alarm/ne/board/port)
+         * @param {object} position - 画布坐标 {x, y}
+         * @param {object} customProps - 自定义属性（加载示例时使用）
+         * @returns {object} cytoscape node
+         */
+        function createNode(type, position, customProps) {
+            const config = NODE_CONFIG[type];
+            if (!config) return null;
+
+            nodeCounter[type]++;
+            const id = type + '_' + String(nodeCounter[type]).padStart(3, '0');
+
+            // 构建属性
+            const props = {};
+            for (const [key, propConfig] of Object.entries(config.props)) {
+                props[key] = customProps && customProps[key] !== undefined
+                    ? customProps[key] : propConfig.default;
+            }
+
+            const node = cy.add({
+                group: 'nodes',
+                data: {
+                    id: id,
+                    label: props.name || id,
+                    ...props,
+                    nodeType: type
+                },
+                position: position
+            });
+
+            updateStatus();
+            return node;
+        }
+
+        // ================================================================
+        // 6. 边类型选择与创建
+        // ================================================================
+
+        /**
+         * 选择边类型，进入连线模式
+         * @param {string} type - 边类型
+         */
+        function selectEdgeType(type) {
+            // 切换选中状态
+            document.querySelectorAll('.edge-type-item').forEach(el => {
+                el.classList.toggle('active', el.dataset.type === type);
+            });
+
+            if (currentEdgeType === type && isConnectMode) {
+                // 再次点击取消
+                cancelConnectMode();
+                return;
+            }
+
+            currentEdgeType = type;
+            isConnectMode = true;
+            connectSourceNode = null;
+            document.getElementById('connectModeBar').classList.add('visible');
+            document.getElementById('connectModeText').textContent =
+                '连线模式 [' + type + ']: 点击源节点 → 点击目标节点';
+            document.getElementById('statusText').textContent =
+                '连线模式 (' + type + ') · 请点击源节点';
+        }
+
+        /** 取消连线模式 */
+        function cancelConnectMode() {
+            currentEdgeType = null;
+            isConnectMode = false;
+            connectSourceNode = null;
+            document.getElementById('connectModeBar').classList.remove('visible');
+            document.querySelectorAll('.edge-type-item').forEach(el => {
+                el.classList.remove('active');
+            });
+            updateStatus();
+        }
+
+        // ================================================================
+        // 7. 画布交互事件
+        // ================================================================
+
+        // 处理节点点击的核心函数
+        function handleNodeClick(node) {
+            if (isConnectMode && currentEdgeType) {
+                // 连线模式
+                if (!connectSourceNode) {
+                    connectSourceNode = node;
+                    document.getElementById('connectModeText').textContent =
+                        '连线模式 [' + currentEdgeType + ']: 请点击目标节点';
+                    document.getElementById('statusText').textContent =
+                        '连线模式 · 已选源节点: ' + node.data('id');
+                    node.addClass('connect-source');
+                } else {
+                    if (connectSourceNode.id() !== node.id()) {
+                        createEdge(connectSourceNode, node, currentEdgeType);
+                    } else {
+                        showToast('不能连接同一个节点', 'error');
+                    }
+                    document.querySelectorAll('.connect-source').forEach(n => {
+                        n.removeClass('connect-source');
+                    });
+                    connectSourceNode = null;
+                    document.getElementById('connectModeText').textContent =
+                        '连线模式 [' + currentEdgeType + ']: 点击源节点 → 点击目标节点';
+                    document.getElementById('statusText').textContent =
+                        '连线模式 (' + currentEdgeType + ') · 请点击源节点';
+                }
+            } else {
+                showNodeProperties(node);
+            }
+        }
+
+        // 节点 click 事件
+        cy.on('click', 'node', (evt) => {
+            handleNodeClick(evt.target);
+        });
+
+        /** 点击空白区域取消选中 */
+        cy.on('click', (evt) => {
+            if (evt.target === cy) {
+                if (!isConnectMode) {
+                    cy.elements().unselect();
+                    showNoSelection();
+                }
+            }
+        });
+
+        /** 点击边，显示属性 */
+        cy.on('click', 'edge', (evt) => {
+            if (!isConnectMode) {
+                showEdgeProperties(evt.target);
+            }
+        });
+
+        /** 节点拖拽移动后更新状态 */
+        cy.on('dragfree', 'node', () => {
+            updateStatus();
+        });
+
+        /** 节点删除 */
+        cy.on('remove', 'node', () => {
+            updateStatus();
+        });
+
+        /** 边删除 */
+        cy.on('remove', 'edge', () => {
+            updateStatus();
+        });
+
+        // 键盘快捷键
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Delete' || e.key === 'Backspace') {
+                const selected = cy.elements(':selected');
+                if (selected.length > 0) {
+                    selected.remove();
+                    showNoSelection();
+                    showToast('已删除选中元素', 'info');
+                }
+            }
+            if (e.key === 'Escape') {
+                cancelConnectMode();
+            }
+        });
+
+        // ================================================================
+        // 8. 边创建
+        // ================================================================
+
+        /**
+         * 创建边
+         * @param {object} source - 源节点
+         * @param {object} target - 目标节点
+         * @param {string} edgeType - 边类型
+         */
+        function createEdge(source, target, edgeType) {
+            const config = EDGE_CONFIG[edgeType];
+            if (!config) return;
+
+            // 构建属性
+            const props = {};
+            for (const [key, propConfig] of Object.entries(config.props)) {
+                props[key] = propConfig.default;
+            }
+
+            // 检查是否已存在相同边
+            const existing = cy.edges().filter(e => {
+                return e.data('source') === source.id() &&
+                       e.data('target') === target.id() &&
+                       e.data('edgeType') === edgeType;
+            });
+            if (existing.length > 0) {
+                showToast('相同类型的边已存在', 'error');
+                return;
+            }
+
+            cy.add({
+                group: 'edges',
+                data: {
+                    id: source.id() + '_' + edgeType + '_' + target.id(),
+                    source: source.id(),
+                    target: target.id(),
+                    edgeType: edgeType,
+                    ...props
+                }
+            });
+
+            showToast('已创建 ' + edgeType + ' 边: ' + source.id() + ' → ' + target.id(), 'success');
+            updateStatus();
+        }
+
+        // ================================================================
+        // 9. 属性编辑功能
+        // ================================================================
+
+        /** 显示节点的属性编辑面板 */
+        function showNodeProperties(node) {
+            const type = node.data('nodeType');
+            const config = NODE_CONFIG[type];
+            if (!config) return;
+
+            document.getElementById('noSelection').style.display = 'none';
+            const editor = document.getElementById('propEditor');
+            editor.style.display = 'block';
+
+            let html = '<div class="prop-group"><label>节点ID</label>' +
+                       '<input type="text" value="' + node.id() + '" disabled style="color:#999"></div>';
+
+            // 节点名称（特殊处理，同步更新画布标签）
+            html += '<div class="prop-group"><label>显示名称</label>' +
+                    '<input type="text" id="prop_displayName" value="' +
+                    (node.data('label') || '') + '" ' +
+                    'onchange="updateNodeLabel(\'' + node.id() + '\', this.value)"></div>';
+
+            // 类型属性
+            for (const [key, propConfig] of Object.entries(config.props)) {
+                const val = node.data(key) !== undefined ? node.data(key) : propConfig.default;
+                html += '<div class="prop-group"><label>' + propConfig.label + '</label>';
+
+                if (propConfig.type === 'text') {
+                    html += '<input type="text" value="' + escHtml(String(val)) + '" ' +
+                            'onchange="updateNodeProp(\'' + node.id() + '\', \'' + key + '\', this.value)">';
+                } else if (propConfig.type === 'number') {
+                    html += '<input type="number" value="' + val + '" step="0.1" ' +
+                            'onchange="updateNodeProp(\'' + node.id() + '\', \'' + key + '\', Number(this.value))">';
+                } else if (propConfig.type === 'select') {
+                    html += '<select onchange="updateNodeProp(\'' + node.id() + '\', \'' + key + '\', this.value)">';
+                    for (const opt of propConfig.options) {
+                        html += '<option value="' + opt + '" ' + (val == opt ? 'selected' : '') + '>' + opt + '</option>';
+                    }
+                    html += '</select>';
+                } else if (propConfig.type === 'textarea') {
+                    html += '<textarea onchange="updateNodeProp(\'' + node.id() + '\', \'' + key + '\', this.value)">' +
+                            escHtml(String(val)) + '</textarea>';
+                }
+                html += '</div>';
+            }
+
+            // 删除按钮
+            html += '<div class="prop-group" style="margin-top:16px;padding-top:12px;border-top:1px solid #eee">' +
+                    '<button class="btn btn-danger" style="width:100%;padding:6px" ' +
+                    'onclick="deleteSelected(\'' + node.id() + '\')">删除节点</button></div>';
+
+            editor.innerHTML = html;
+        }
+
+        /** 显示边的属性编辑面板 */
+        function showEdgeProperties(edge) {
+            const edgeType = edge.data('edgeType');
+            const config = EDGE_CONFIG[edgeType];
+            if (!config) return;
+
+            document.getElementById('noSelection').style.display = 'none';
+            const editor = document.getElementById('propEditor');
+            editor.style.display = 'block';
+
+            let html = '<div class="prop-group"><label>边ID</label>' +
+                       '<input type="text" value="' + edge.id() + '" disabled style="color:#999"></div>';
+            html += '<div class="prop-group"><label>类型</label>' +
+                    '<input type="text" value="' + edgeType + '" disabled style="color:#999"></div>';
+            html += '<div class="prop-group"><label>源节点</label>' +
+                    '<input type="text" value="' + edge.data('source') + '" disabled style="color:#999"></div>';
+            html += '<div class="prop-group"><label>目标节点</label>' +
+                    '<input type="text" value="' + edge.data('target') + '" disabled style="color:#999"></div>';
+
+            // 类型属性
+            for (const [key, propConfig] of Object.entries(config.props)) {
+                const val = edge.data(key) !== undefined ? edge.data(key) : propConfig.default;
+                html += '<div class="prop-group"><label>' + propConfig.label + '</label>';
+
+                if (propConfig.type === 'text') {
+                    html += '<input type="text" value="' + escHtml(String(val)) + '" ' +
+                            'onchange="updateEdgeProp(\'' + edge.id() + '\', \'' + key + '\', this.value)">';
+                } else if (propConfig.type === 'number') {
+                    html += '<input type="number" value="' + val + '" step="0.1" ' +
+                            'onchange="updateEdgeProp(\'' + edge.id() + '\', \'' + key + '\', Number(this.value))">';
+                } else if (propConfig.type === 'select') {
+                    html += '<select onchange="updateEdgeProp(\'' + edge.id() + '\', \'' + key + '\', this.value)">';
+                    for (const opt of propConfig.options) {
+                        html += '<option value="' + opt + '" ' + (val == opt ? 'selected' : '') + '>' + opt + '</option>';
+                    }
+                    html += '</select>';
+                }
+                html += '</div>';
+            }
+
+            // 删除按钮
+            html += '<div class="prop-group" style="margin-top:16px;padding-top:12px;border-top:1px solid #eee">' +
+                    '<button class="btn btn-danger" style="width:100%;padding:6px" ' +
+                    'onclick="deleteSelected(\'' + edge.id() + '\')">删除边</button></div>';
+
+            editor.innerHTML = html;
+        }
+
+        /** 显示无选中提示 */
+        function showNoSelection() {
+            document.getElementById('noSelection').style.display = 'block';
+            const editor = document.getElementById('propEditor');
+            editor.style.display = 'none';
+        }
+
+        // ================================================================
+        // 10. 属性更新回调函数（全局，供 onchange 使用）
+        // ================================================================
+
+        /** 更新节点显示名称 */
+        function updateNodeLabel(nodeId, value) {
+            const node = cy.getElementById(nodeId);
+            if (node.length) {
+                node.data('label', value || nodeId);
+                // 如果 name 属性为空，同步更新
+                if (!node.data('name')) {
+                    node.data('name', value);
+                }
+            }
+        }
+
+        /** 更新节点属性 */
+        function updateNodeProp(nodeId, key, value) {
+            const node = cy.getElementById(nodeId);
+            if (node.length) {
+                node.data(key, value);
+                // 如果更新的是 name，同步更新 label
+                if (key === 'name') {
+                    node.data('label', value || nodeId);
+                    // 刷新属性面板的显示名称字段
+                    const displayInput = document.getElementById('prop_displayName');
+                    if (displayInput) displayInput.value = value || nodeId;
+                }
+            }
+        }
+
+        /** 更新边属性 */
+        function updateEdgeProp(edgeId, key, value) {
+            const edge = cy.getElementById(edgeId);
+            if (edge.length) {
+                edge.data(key, value);
+            }
+        }
+
+        /** 删除选中元素 */
+        function deleteSelected(id) {
+            const el = cy.getElementById(id);
+            if (el.length) {
+                el.remove();
+                showNoSelection();
+                updateStatus();
+                showToast('已删除: ' + id, 'info');
+            }
+        }
+
+        // ================================================================
+        // 11. 工具栏功能
+        // ================================================================
+
+        /** 自动布局 */
+        function autoLayout() {
+            if (cy.nodes().length === 0) {
+                showToast('画布中没有节点', 'error');
+                return;
+            }
+            cy.layout({
+                name: 'dagre',
+                rankDir: 'TB',
+                spacingFactor: 1.5,
+                nodeSep: 60,
+                rankSep: 80,
+                animate: true,
+                animationDuration: 500
+            }).run();
+            showToast('自动布局完成', 'success');
+        }
+
+        /** 生成 NebulaGraph INSERT 语句 */
+        function generateSQL() {
+            const nodes = cy.nodes();
+            const edges = cy.edges();
+
+            if (nodes.length === 0 && edges.length === 0) {
+                showToast('画布为空，请先创建拓扑图', 'error');
+                return;
+            }
+
+            let sql = '-- ============================================\n';
+            sql += '-- NebulaGraph INSERT 语句 (由拓扑图编辑器生成)\n';
+            sql += '-- 生成时间: ' + new Date().toLocaleString() + '\n';
+            sql += '-- 节点数: ' + nodes.length + ' · 边数: ' + edges.length + '\n';
+            sql += '-- ============================================\n\n';
+
+            // 按类型分组生成节点
+            const nodeGroups = {};
+            nodes.forEach(node => {
+                const type = node.data('nodeType');
+                if (!nodeGroups[type]) nodeGroups[type] = [];
+                nodeGroups[type].push(node);
+            });
+
+            for (const [type, typeNodes] of Object.entries(nodeGroups)) {
+                const config = NODE_CONFIG[type];
+                if (!config) continue;
+                const propKeys = Object.keys(config.props);
+                const propNames = propKeys.join(', ');
+
+                sql += '-- 插入 ' + config.label + ' (' + type + ')\n';
+
+                // 单条 INSERT 语句（每个节点单独一条，更清晰）
+                for (const node of typeNodes) {
+                    const values = propKeys.map(key => {
+                        let val = node.data(key);
+                        const propConfig = config.props[key];
+                        if (val === undefined || val === null) val = propConfig.default;
+                        if (propConfig.type === 'text' || propConfig.type === 'textarea') {
+                            return '"' + escSql(String(val)) + '"';
+                        } else if (propConfig.type === 'select' && propConfig.options) {
+                            // 数字型选项不加引号
+                            if (typeof val === 'number' || (typeof propConfig.options[0] === 'number')) {
+                                return val;
+                            }
+                            return '"' + escSql(String(val)) + '"';
+                        }
+                        return val;
+                    }).join(', ');
+
+                    sql += 'INSERT VERTEX ' + type + '(' + propNames + ') VALUES ' +
+                           '"' + node.id() + '":(' + values + ');\n';
+                }
+                sql += '\n';
+            }
+
+            // 按边类型分组生成边
+            const edgeGroups = {};
+            edges.forEach(edge => {
+                const etype = edge.data('edgeType');
+                if (!edgeGroups[etype]) edgeGroups[etype] = [];
+                edgeGroups[etype].push(edge);
+            });
+
+            for (const [etype, typeEdges] of Object.entries(edgeGroups)) {
+                const config = EDGE_CONFIG[etype];
+                if (!config) continue;
+                const propKeys = Object.keys(config.props);
+                const propNames = propKeys.length > 0 ? propKeys.join(', ') : '';
+
+                sql += '-- 插入 ' + config.label + ' (' + etype + ')\n';
+
+                // 生成批量 INSERT
+                const edgeValues = typeEdges.map(edge => {
+                    const values = propKeys.map(key => {
+                        let val = edge.data(key);
+                        const propConfig = config.props[key];
+                        if (val === undefined || val === null) val = propConfig.default;
+                        if (propConfig.type === 'text') {
+                            return '"' + escSql(String(val)) + '"';
+                        } else if (propConfig.type === 'select' && propConfig.options) {
+                            if (typeof val === 'number') return val;
+                            return '"' + escSql(String(val)) + '"';
+                        }
+                        return val;
+                    }).join(', ');
+
+                    const src = edge.data('source');
+                    const tgt = edge.data('target');
+                    if (propKeys.length > 0) {
+                        return '"' + src + '" -> "' + tgt + '":(' + values + ')';
+                    } else {
+                        return '"' + src + '" -> "' + tgt + '":()';
+                    }
+                }).join(',\n    ');
+
+                if (propKeys.length > 0) {
+                    sql += 'INSERT EDGE ' + etype + '(' + propNames + ') VALUES \n    ' + edgeValues + ';\n';
+                } else {
+                    sql += 'INSERT EDGE ' + etype + '() VALUES \n    ' + edgeValues + ';\n';
+                }
+                sql += '\n';
+            }
+
+            // 生成 Schema 语句（可选）
+            sql += '-- ============================================\n';
+            sql += '-- Schema 创建语句 (如需要)\n';
+            sql += '-- ============================================\n';
+            sql += '-- CREATE SPACE IF NOT EXISTS alarm_topology(partition_num = 10, replica_factor = 1, vid_type = FIXED_STRING(64));\n';
+            sql += '-- USE alarm_topology;\n';
+
+            document.getElementById('sqlContent').textContent = sql;
+            showToast('SQL 生成成功 (' + (sql.length / 1024).toFixed(1) + ' KB)', 'success');
+        }
+
+        /** 复制 SQL 到剪贴板 */
+        function copySQL() {
+            const content = document.getElementById('sqlContent').textContent;
+            if (content.includes('点击"生成 SQL"')) {
+                showToast('请先生成 SQL', 'error');
+                return;
+            }
+            navigator.clipboard.writeText(content).then(() => {
+                showToast('已复制到剪贴板', 'success');
+            }).catch(() => {
+                // 降级方案
+                const textarea = document.createElement('textarea');
+                textarea.value = content;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showToast('已复制到剪贴板', 'success');
+            });
+        }
+
+        /** 清空 SQL 输出 */
+        function clearSQL() {
+            document.getElementById('sqlContent').textContent =
+                '-- 在画布中创建拓扑图后，点击"生成 SQL"按钮查看 INSERT 语句';
+        }
+
+        /** 导出图片 */
+        function exportImage() {
+            if (cy.nodes().length === 0) {
+                showToast('画布中没有内容', 'error');
+                return;
+            }
+            const pngData = cy.png({
+                bg: '#ffffff',
+                full: true,
+                scale: 2
+            });
+            // 使用 FileSaver
+            const link = document.createElement('a');
+            link.download = 'topology_' + Date.now() + '.png';
+            link.href = pngData;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('图片已导出', 'success');
+        }
+
+        /** 清空画布 */
+        function clearGraph() {
+            if (cy.nodes().length === 0) {
+                showToast('画布已经为空', 'info');
+                return;
+            }
+            if (confirm('确定要清空画布吗？所有节点和边将被删除。')) {
+                cy.elements().remove();
+                nodeCounter = { alarm: 0, ne: 0, board: 0, port: 0 };
+                showNoSelection();
+                updateStatus();
+                showToast('画布已清空', 'info');
+            }
+        }
+
+        /** 加载示例数据 */
+        function loadSample() {
+            // 先清空
+            cy.elements().remove();
+            nodeCounter = { alarm: 0, ne: 0, board: 0, port: 0 };
+
+            // 创建节点
+            const ne1 = createNode('ne', { x: 200, y: 80 }, { name: '核心路由器R1', type: 'router', ip: '192.168.1.1' });
+            const ne2 = createNode('ne', { x: 500, y: 80 }, { name: '汇聚交换机S1', type: 'switch', ip: '192.168.1.2' });
+
+            const board1 = createNode('board', { x: 200, y: 200 }, { name: '主控板', slot_id: 1 });
+            const board2 = createNode('board', { x: 500, y: 200 }, { name: '业务板A', slot_id: 2 });
+
+            const port1 = createNode('port', { x: 200, y: 320 }, { name: '万兆光口1', speed: '10G', status: 'up' });
+            const port2 = createNode('port', { x: 500, y: 320 }, { name: '万兆光口2', speed: '10G', status: 'down' });
+
+            const alarm1 = createNode('alarm', { x: 100, y: 450 }, { name: '网络中断告警', level: 'critical', content: '核心路由器连接中断' });
+            const alarm2 = createNode('alarm', { x: 350, y: 450 }, { name: '端口DOWN', level: 'warning', content: '端口状态异常' });
+            const alarm3 = createNode('alarm', { x: 600, y: 450 }, { name: 'CPU过载', level: 'warning', content: 'CPU使用率超过80%' });
+
+            // 创建边
+            createEdge(ne1, board1, 'leave');
+            createEdge(ne1, board2, 'leave');
+            createEdge(ne2, board1, 'leave');
+            createEdge(ne2, board2, 'leave');
+            createEdge(board1, port1, 'leave');
+            createEdge(board2, port2, 'leave');
+            createEdge(port1, port2, 'link');
+            createEdge(alarm1, alarm2, 'trigger');
+            createEdge(alarm1, port1, 'happen');
+            createEdge(alarm2, port2, 'happen');
+            createEdge(alarm3, port1, 'happen');
+            createEdge(alarm1, board1, 'enhance');
+            createEdge(alarm2, board2, 'enhance');
+
+            // 自动布局
+            setTimeout(() => autoLayout(), 100);
+            showToast('示例拓扑已加载', 'success');
+        }
+
+        /** 显示帮助信息 */
+        function showHelp() {
+            const helpText =
+                '=== NebulaGraph 拓扑图编辑器 使用说明 ===\n\n' +
+                '1. 创建节点：从左侧面板拖拽节点类型到画布\n' +
+                '2. 创建边：点击左侧边类型进入连线模式，然后依次点击源节点和目标节点\n' +
+                '3. 编辑属性：点击节点或边，在右侧面板编辑属性\n' +
+                '4. 删除元素：选中后按 Delete 键，或点击属性面板的删除按钮\n' +
+                '5. 自动布局：点击工具栏"自动布局"按钮\n' +
+                '6. 生成 SQL：点击"生成 SQL"按钮，在底部查看 INSERT 语句\n' +
+                '7. 导出图片：点击"导出图片"保存为 PNG\n\n' +
+                '快捷键：\n' +
+                '  Delete/Backspace - 删除选中元素\n' +
+                '  Escape - 取消连线模式\n\n' +
+                '节点类型：alarm(告警) / ne(网元) / board(单板) / port(端口)\n' +
+                '边类型：trigger / link / leave / happen / enhance';
+            alert(helpText);
+        }
+
+        // ================================================================
+        // 12. 辅助函数
+        // ================================================================
+
+        /** 更新状态栏 */
+        function updateStatus() {
+            const nodeCount = cy.nodes().length;
+            const edgeCount = cy.edges().length;
+            document.getElementById('statusText').textContent =
+                '节点: ' + nodeCount + ' · 边: ' + edgeCount;
+        }
+
+        /** HTML 转义 */
+        function escHtml(str) {
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                      .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
+        /** SQL 字符串转义 */
+        function escSql(str) {
+            return str.replace(/"/g, '\\"');
+        }
+
+        /** Toast 通知 */
+        function showToast(msg, type) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.className = 'toast ' + (type || 'info');
+            // 重置动画
+            toast.classList.remove('visible');
+            void toast.offsetWidth;
+            toast.classList.add('visible');
+            setTimeout(() => {
+                toast.classList.remove('visible');
+            }, 2500);
+        }
+
+        // ================================================================
+        // 13. 初始化
+        // ================================================================
+
+        // 添加一些初始占位提示
+        const placeholderText = cy.add({
+            group: 'nodes',
+            data: { id: '_placeholder', nodeType: '_placeholder', label: '← 从左侧拖拽节点到此处' },
+            position: { x: 400, y: 200 }
+        });
+        placeholderText.style({
+            'background-color': '#f0f0f0',
+            'border-color': '#ddd',
+            'border-width': 2,
+            'border-style': 'dashed',
+            'color': '#ccc',
+            'font-size': '14px',
+            'width': 240,
+            'height': 60,
+            'opacity': 0.7
+        });
+        placeholderText.data('type', '_placeholder');
+
+        // 点击画布移除占位符
+        const removePlaceholder = () => {
+            const ph = cy.getElementById('_placeholder');
+            if (ph.length) {
+                ph.remove();
+            }
+            cy.off('add', 'node', removePlaceholder);
+        };
+        cy.on('add', 'node', removePlaceholder);
+
+        updateStatus();
+
+        console.log('NebulaGraph 拓扑图编辑器已启动！');
+        console.log('提示：拖拽左侧节点到画布，选择边类型后点击节点连线。');
+    </script>
+
+</body>
+</html>

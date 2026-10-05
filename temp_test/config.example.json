@@ -1,0 +1,27 @@
+{
+  "mysql": {
+    "host": "127.0.0.1",
+    "port": 3307,
+    "user": "root",
+    "password": "root"
+  },
+  "pg": {
+    "host": "127.0.0.1",
+    "port": 5432,
+    "user": "postgres",
+    "password": "postgres",
+    "dbname": "postgres"
+  },
+  "redis": {
+    "host": "127.0.0.1",
+    "port": 6379
+  },
+  "clickhouse": {
+    "host": "127.0.0.1",
+    "port": 8123,
+    "username": "default",
+    "password": "clickhouse"
+  },
+  "nebula":     { "host": "127.0.0.1", "port": 9669, "user": "root", "password": "nebula", "space": "demo",
+                  "ssl": null }
+}

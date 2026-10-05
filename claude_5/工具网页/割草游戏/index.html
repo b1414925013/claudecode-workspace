@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>传奇·割草江湖</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234fae5a'/%3E%3Cpath d='M32 50 C24 42 24 28 32 14 C40 28 40 42 32 50Z' fill='%23fff'/%3E%3Cpath d='M20 46 C15 42 15 32 20 22 C25 32 25 42 20 46Z' fill='%23e2f7df'/%3E%3Cpath d='M44 46 C49 42 49 32 44 22 C39 32 39 42 44 46Z' fill='%23e2f7df'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div id="game"></div>
+
+<!-- ===== HUD ===== -->
+<div id="hud">
+  <div class="top">
+    <div class="leftBox">
+      <div id="expWrap"><div id="expLv">Lv.1</div><div id="expBar"><div id="expFill"></div></div></div>
+      <div id="hpWrap"><div id="hpTxt">100 / 100</div><div id="hpBar"><div id="hpFill"></div></div></div>
+      <div id="timeBox">15:00</div>
+    </div>
+    <div class="rightBox">
+      <div id="coinBox">0<small>本局 · 累计 0</small></div>
+    </div>
+  </div>
+  <div id="announce"></div>
+  <div id="skillsBar"></div>
+</div>
+
+<!-- ===== 升级弹窗 ===== -->
+<div class="modal" id="upgModal">
+  <div class="panel">
+    <h2>升级！</h2>
+    <div class="sub" id="upgSub">选择一个技能强化你的角色</div>
+    <div class="upgCards" id="upgCards"></div>
+  </div>
+</div>
+
+<!-- ===== 结束弹窗 ===== -->
+<div class="modal" id="endModal">
+  <div class="panel result" id="endPanel">
+    <h2 id="endTitle">胜利！</h2>
+    <div class="sub" id="endSub">你击杀了终极怪物，通关成功</div>
+    <div id="endStats"></div>
+    <div class="rowBtns">
+      <button class="btn primary" id="againBtn">再来一局</button>
+      <button class="btn ghost" id="menuBtn">返回主菜单</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 主菜单弹窗 ===== -->
+<div class="modal" id="menuModal">
+  <div class="panel" id="menuBox">
+    <h2>传奇 · 割草江湖</h2>
+    <div class="sub">玛法大陆 3D 俯视角割草生存 · 单局 15 分钟 · 杀怪捡金币升级</div>
+    <div class="coinLine" id="menuCoins">累计金币：0</div>
+    <div class="roleGrid" id="roleGrid"></div>
+    <div class="rowBtns">
+      <button class="btn primary" id="startBtn">开始冒险（传奇战士）</button>
+    </div>
+    <div class="menuHint">操作：<b>WASD</b> 移动 · <b>鼠标拖动</b> 微调视角 · 角色自动放技能<br/>击杀怪物获得经验升级，每级三选一技能；掉落金币/血瓶/buff 自动拾取。死亡即失败，活到第 15 分钟击杀终极怪物即可通关。</div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script src="assets/mir_data.js"></script>
+<script src="js/01_config.js"></script>
+<script src="js/02_scene.js"></script>
+<script src="js/03_terrain.js"></script>
+<script src="js/04_obstacles.js"></script>
+<script src="js/05_world.js"></script>
+<script src="js/06_player.js"></script>
+<script src="js/07_skills.js"></script>
+<script src="js/08_enemies.js"></script>
+<script src="js/09_items.js"></script>
+<script src="js/10_ui.js"></script>
+<script src="js/11_main.js"></script>
+<script src="js/12_boot.js"></script>
+</body>
+</html>

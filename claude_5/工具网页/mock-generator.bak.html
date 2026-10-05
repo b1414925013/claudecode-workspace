@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>本地Mock数据生成器</title>
+<script src="https://cdn.jsdelivr.net/npm/faker@5.5.3/dist/faker.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui, sans-serif}
+body{padding:20px;background:#f4f7fa;color:#222}
+.container{max-width:1200px;margin:0 auto;display:grid;grid-template-columns: 1fr 1fr;gap:20px}
+.panel{background:#fff;border-radius:10px;padding:18px;box-shadow:0 1px 4px #00000015}
+h2{margin-bottom:16px;font-size:18px}
+.row{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+input,select,textarea{padding:8px;border:1px solid #ccc;border-radius:6px;font-size:14px}
+input{flex:1}
+button{padding:8px 14px;border:none;border-radius:6px;cursor:pointer;background:#2563eb;color:#fff}
+button.del{background:#dc2626}
+button.success{background:#16a34a}
+.field-item{border:1px solid #e5e7eb;padding:10px;border-radius:8px;margin-bottom:8px}
+#output{width:100%;min-height:380px;font-family:monospace;white-space:pre;resize:vertical}
+.config-line{margin-bottom:12px}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="panel">
+    <h2>Schema 字段配置</h2>
+    <div class="config-line">
+      生成条数：<input id="count" value="10" type="number" min="1" max="1000">
+      输出格式：
+      <select id="outType">
+        <option value="json">JSON</option>
+        <option value="csv">CSV</option>
+        <option value="sql">SQL INSERT</option>
+      </select>
+    </div>
+    <div id="fieldList"></div>
+    <div class="row" style="margin-top:14px">
+      <button onclick="addField()">+ 添加字段</button>
+      <button onclick="genData()" class="success">生成Mock数据</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>输出结果</h2>
+    <textarea id="output"></textarea>
+    <div class="row" style="margin-top:10px">
+      <button onclick="copyResult()">复制</button>
+      <button onclick="document.getElementById('output').value=''">清空</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const fieldTypes = [
+  {key:"increment",label:"自增ID"},
+  {key:"uuid",label:"UUID v4"},
+  {key:"name",label:"姓名"},
+  {key:"email",label:"邮箱"},
+  {key:"phone",label:"手机号"},
+  {key:"username",label:"用户名"},
+  {key:"int",label:"整数"},
+  {key:"float",label:"浮点数"},
+  {key:"boolean",label:"布尔值"},
+  {key:"timestamp",label:"时间戳"},
+  {key:"date",label:"日期"},
+  {key:"url",label:"URL"},
+  {key:"ipv4",label:"IPv4"},
+  {key:"ipv6",label:"IPv6"},
+  {key:"mac",label:"MAC地址"},
+  {key:"color",label:"十六进制颜色"},
+  {key:"text",label:"段落文本"},
+  {key:"country",label:"国家"},
+  {key:"enum",label:"枚举(逗号分隔)"},
+  {key:"fixed",label:"固定常量"}
+];
+
+let fields = [];
+function renderFields(){
+  const wrap = document.getElementById("fieldList");
+  wrap.innerHTML = "";
+  fields.forEach((f,idx)=>{
+    const div = document.createElement("div");
+    div.className="field-item";
+    div.innerHTML = `
+      <div class="row">
+        <input placeholder="字段名" value="${f.name||''}" onchange="fields[${idx}].name=this.value">
+        <select onchange="fields[${idx}].type=this.value">
+          ${fieldTypes.map(t=>`<option value="${t.key}" ${f.type===t.key?'selected':''}>${t.label}</option>`).join('')}
+        </select>
+        <button class="del" onclick="removeField(${idx})">删除</button>
+      </div>
+      <div style="margin-top:6px;font-size:12px;color:#666">
+        参数：<input placeholder="枚举值/固定值/范围min,max" value="${f.arg||''}" onchange="fields[${idx}].arg=this.value">
+      </div>
+    `;
+    wrap.appendChild(div);
+  })
+}
+
+function addField(){
+  fields.push({name:"",type:"name",arg:""});
+  renderFields();
+}
+function removeField(i){
+  fields.splice(i,1);
+  renderFields();
+}
+
+function getValue(type,arg,rowIdx){
+  switch(type){
+    case "increment": return rowIdx+1;
+    case "uuid": return faker.datatype.uuid();
+    case "name": return faker.name.findName();
+    case "email": return faker.internet.email();
+    case "phone": return faker.phone.phoneNumber();
+    case "username": return faker.internet.userName();
+    case "int":
+      let [min,max]=arg.split(',').map(Number);
+      return faker.datatype.number({min:min||0,max:max||1000});
+    case "float":
+      let [fmin,fmax]=arg.split(',').map(Number);
+      return faker.datatype.float({min:fmin||0,max:fmax||99,precision:0.01});
+    case "boolean": return faker.datatype.boolean();
+    case "timestamp": return Date.now();
+    case "date": return faker.date.past().toISOString().slice(0,10);
+    case "url": return faker.internet.url();
+    case "ipv4": return faker.internet.ip();
+    case "ipv6": return faker.internet.ipv6();
+    case "mac": return faker.internet.mac();
+    case "color": return faker.internet.color();
+    case "text": return faker.lorem.paragraph();
+    case "country": return faker.address.country();
+    case "enum":
+      const arr = arg.split(',').map(x=>x.trim()).filter(Boolean);
+      return arr.length>0 ? faker.random.arrayElement(arr) : "";
+    case "fixed": return arg;
+    default: return "";
+  }
+}
+
+function genData(){
+  const count = Number(document.getElementById("count").value);
+  const outType = document.getElementById("outType").value;
+  const rows = [];
+  for(let i=0;i<count;i++){
+    const obj = {};
+    fields.forEach(fd=>{
+      if(!fd.name) return;
+      obj[fd.name] = getValue(fd.type, fd.arg, i);
+    })
+    rows.push(obj);
+  }
+  let result = "";
+  if(outType === "json"){
+    result = JSON.stringify(rows,null,2);
+  }else if(outType === "csv"){
+    const keys = Object.keys(rows[0]||{});
+    result = keys.join(',')+"\n";
+    rows.forEach(r=>{
+      const line = keys.map(k=>{
+        let v = r[k];
+        if(typeof v === "string" && v.includes(',')) return `"${v}"`;
+        return v;
+      }).join(',');
+      result += line+"\n";
+    })
+  }else if(outType === "sql"){
+    if(!rows.length) return;
+    const table = "mock_table";
+    const keys = Object.keys(rows[0]);
+    result = "";
+    rows.forEach(r=>{
+      const vals = keys.map(k=>{
+        const v = r[k];
+        if(typeof v === "number") return v;
+        return `'${String(v).replace(/'/g,"''")}'`;
+      })
+      result += `INSERT INTO ${table}(${keys.join(',')}) VALUES(${vals.join(',')});\n`;
+    })
+  }
+  document.getElementById("output").value = result;
+}
+function copyResult(){
+  const el = document.getElementById("output");
+  el.select();
+  document.execCommand("copy");
+  alert("已复制到剪贴板");
+}
+// 默认预置一条示例字段
+fields.push({name:"id",type:"increment",arg:""});
+fields.push({name:"username",type:"username",arg:""});
+fields.push({name:"email",type:"email",arg:""});
+renderFields();
+</script>
+</body>
+</html>

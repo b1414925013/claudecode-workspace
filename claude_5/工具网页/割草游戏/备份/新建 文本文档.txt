@@ -1,0 +1,22 @@
+如果要继续做成可用游戏素材，我建议下一步选一个方向：
+
+1. **补全四向形象**：每个角色生成上下左右四个朝向
+2. **做角色精灵表**：每个角色拆成行走、攻击、受击、死亡帧
+3. **做角色解锁界面**：生成一张游戏内角色选择 / 解锁 UI 图
+
+
+建议在游戏里这样使用：
+
+- **树木 / 石块**：作为常规阻挡物，挡住移动和技能
+- **喷泉 / 废墟石柱**：作为场景地标或 BOSS 战参照物
+- **木桶 / 箱子**：可做成可破坏物或临时掩体
+- **栅栏柱**：用于划分区域、限制怪物路径
+
+
+const MONSTER_TYPES = {
+  slime:  { name:'史莱姆',  color:0x5fcf7f, hp:10,  speed:1.7, radius:0.45, exp:3,  gold:[0,2] },
+  ghost:  { name:'幽灵',    color:0xb39fff, hp:22,  speed:2.1, radius:0.5,  exp:6,  gold:[1,3] },
+  runner: { name:'冲刺鬼',  color:0xffce6b, hp:16,  speed:3.2, radius:0.42, exp:7,  gold:[1,3] },
+  brute:  { name:'石魔',    color:0x8a9a6a, hp:60,  speed:1.1, radius:0.9,  exp:15, gold:[4,7], boss:false },
+  boss:   { name:'魔像BOSS',color:0x8a6bff, hp:400, speed:0.9, radius:2.0,  exp:80, gold:[40,60], boss:true },
+  final:  { name:'终极魔帝', color:0xff4d5a, hp:2500,speed:0.8, radius:2.8,  exp:400,gold:[200,200], boss:true, final:true }

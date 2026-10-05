@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>青草物语 · 割草求生</title>
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { width:100%; height:100%; overflow:hidden; font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif; background:#2c3e50; }
+  #game { position:fixed; inset:0; }
+  canvas { display:block; }
+
+  /* ===== HUD ===== */
+  #hud { position:fixed; inset:0; pointer-events:none; z-index:10; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.4); }
+  #hud .top { position:absolute; top:14px; left:16px; right:16px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+  .leftBox, .rightBox { pointer-events:none; }
+  #expWrap { width:260px; }
+  #expLv { font-size:14px; font-weight:700; margin-bottom:4px; }
+  #expBar { height:12px; border-radius:8px; background:rgba(255,255,255,.18); overflow:hidden; border:1px solid rgba(255,255,255,.25); }
+  #expFill { height:100%; width:0%; background:linear-gradient(90deg,#7fd0a8,#ffce4d); border-radius:8px; transition:width .25s; }
+  #timeBox { margin-top:8px; font-size:15px; font-weight:700; background:rgba(0,0,0,.25); border-radius:10px; padding:5px 12px; display:inline-block; }
+  #hpWrap { margin-top:8px; width:260px; }
+  #hpBar { height:12px; border-radius:8px; background:rgba(0,0,0,.3); overflow:hidden; border:1px solid rgba(255,255,255,.25); }
+  #hpFill { height:100%; width:100%; background:linear-gradient(90deg,#ff7aa2,#ff6b6b); border-radius:8px; transition:width .2s; }
+  #hpTxt { font-size:12.5px; margin-bottom:3px; }
+  #coinBox { font-size:20px; font-weight:800; background:rgba(0,0,0,.28); border-radius:12px; padding:8px 16px; text-align:right; }
+  #coinBox small { display:block; font-size:11px; font-weight:400; opacity:.8; }
+
+  /* ===== 底部技能栏 ===== */
+  #skillsBar { position:absolute; bottom:14px; left:50%; transform:translateX(-50%); display:flex; gap:8px; }
+  .skillIcon { width:52px; height:52px; border-radius:12px; background:rgba(255,255,255,.14); border:2px solid rgba(255,255,255,.35); display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:12px; position:relative; }
+  .skillIcon .si-ico { font-size:22px; }
+  .skillIcon .si-lv { position:absolute; top:-7px; right:-7px; background:#ffce4d; color:#5a4a00; border-radius:50%; width:18px; height:18px; font-size:11px; font-weight:800; display:grid; place-items:center; }
+  .skillIcon .si-cd { position:absolute; bottom:0; left:0; right:0; background:rgba(0,0,0,.5); height:0%; border-radius:0 0 10px 10px; }
+  .skillIcon .si-name { position:absolute; bottom:1px; left:0; right:0; text-align:center; font-size:9px; opacity:.85; text-shadow:none; }
+
+  /* ===== 弹窗 ===== */
+  .modal { position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:20; pointer-events:auto; }
+  .modal.show { display:flex; }
+  .panel { background:linear-gradient(180deg,#fffdf7,#f3f7ff); border-radius:18px; padding:26px 26px 22px; width:min(560px,92vw); box-shadow:0 16px 50px rgba(0,0,0,.35); text-align:center; color:#233046; }
+  .panel h2 { font-size:24px; margin-bottom:6px; }
+  .panel .sub { color:#6b7a99; font-size:14px; margin-bottom:16px; }
+  .upgCards { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+  .upgCard { width:150px; border-radius:14px; padding:14px; cursor:pointer; background:#fff; border:2px solid #dfe8f6; transition:.15s; text-align:left; }
+  .upgCard:hover { transform:translateY(-4px); border-color:#4fae5a; box-shadow:0 6px 18px rgba(79,174,90,.25); }
+  .upgCard .u-ico { font-size:26px; text-align:center; }
+  .upgCard .u-name { font-weight:800; font-size:15px; margin:6px 0 2px; }
+  .upgCard .u-desc { font-size:12px; color:#6b7a99; line-height:1.45; }
+  .upgCard .u-tag { display:inline-block; font-size:11px; background:#eef4ec; border-radius:6px; padding:2px 8px; margin-top:6px; color:#3a5c45; }
+  .btn { pointer-events:auto; cursor:pointer; border:none; border-radius:12px; padding:12px 26px; font-size:16px; font-weight:700; margin:6px; transition:.15s; }
+  .btn.primary { background:linear-gradient(135deg,#7fd0a8,#4fae5a); color:#fff; }
+  .btn.primary:hover { filter:brightness(1.08); transform:translateY(-2px); }
+  .btn.ghost { background:#fff; color:#4fae5a; border:2px solid #4fae5a; }
+  .rowBtns { margin-top:16px; display:flex; justify-content:center; flex-wrap:wrap; }
+  #endStats { font-size:14px; color:#3a4a66; line-height:2; margin:8px 0 4px; }
+  #endStats b { color:#233046; }
+  .resultWin h2 { color:#2e9e4c; }
+  .resultLose h2 { color:#e05555; }
+
+  /* ===== 主菜单 / 角色选择 ===== */
+  #menuBox { width:min(720px,94vw); }
+  #menuBox .coinLine { font-size:17px; font-weight:800; color:#c8901f; margin-bottom:12px; }
+  .roleGrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; }
+  #uiBanner { width:100%; max-width:560px; display:block; margin:0 auto 14px; border-radius:14px; box-shadow:0 6px 18px rgba(0,0,0,.18); }
+  .roleCard { border:2px solid #dfe8f6; border-radius:14px; padding:14px; text-align:left; cursor:pointer; background:#fff; transition:.15s; position:relative; }
+  .roleCard:hover { border-color:#4fae5a; transform:translateY(-3px); }
+  .roleCard.locked { opacity:.7; cursor:pointer; }
+  .roleCard .r-ico { font-size:30px; text-align:center; }
+  .roleCard .r-name { font-weight:800; font-size:15px; margin-top:6px; }
+  .roleCard .r-passive { font-size:12px; color:#6b7a99; margin:4px 0; line-height:1.4; }
+  .roleCard .r-price { font-size:12.5px; color:#c8901f; font-weight:700; margin-top:4px; }
+  .roleCard .r-top { display:flex; justify-content:space-between; align-items:center; }
+  .roleCard .r-state { font-size:11px; padding:2px 8px; border-radius:6px; white-space:nowrap; }
+  .roleCard .r-state.un { background:#eef4ec; color:#3a5c45; }
+  .roleCard .r-state.lo { background:#fdf0f0; color:#e05555; }
+  .menuHint { font-size:12.5px; color:#8a96b0; margin-top:10px; line-height:1.6; }
+
+  #announce { position:absolute; top:22%; left:0; right:0; text-align:center; font-size:26px; font-weight:900; opacity:0; transition:opacity .5s; text-shadow:0 2px 8px rgba(0,0,0,.5); }
+  #announce.show { opacity:1; }
+  #announce.warn { color:#ffce4d; }
+  #announce.danger { color:#ff7aa2; }
+
+  .floatText { position:absolute; font-weight:800; font-size:15px; pointer-events:none; animation:floatUp 1s forwards; }
+  @keyframes floatUp { to { transform:translateY(-40px); opacity:0; } }
+
+  @media (max-width:640px){
+    #expWrap{width:150px;} #hpWrap{width:150px;}
+    .panel{width:94vw; padding:20px 14px;}
+    .upgCard{width:120px;}
+  }
+</style>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234fae5a'/%3E%3Cpath d='M32 50 C24 42 24 28 32 14 C40 28 40 42 32 50Z' fill='%23fff'/%3E%3Cpath d='M20 46 C15 42 15 32 20 22 C25 32 25 42 20 46Z' fill='%23e2f7df'/%3E%3Cpath d='M44 46 C49 42 49 32 44 22 C39 32 39 42 44 46Z' fill='%23e2f7df'/%3E%3C/svg%3E">
+</head>
+<body>
+<div id="game"></div>
+
+<!-- ===== HUD ===== -->
+<div id="hud">
+  <div class="top">
+    <div class="leftBox">
+      <div id="expWrap"><div id="expLv">Lv.1</div><div id="expBar"><div id="expFill"></div></div></div>
+      <div id="hpWrap"><div id="hpTxt">100 / 100</div><div id="hpBar"><div id="hpFill"></div></div></div>
+      <div id="timeBox">15:00</div>
+    </div>
+    <div class="rightBox">
+      <div id="coinBox">0<small>本局 · 累计 0</small></div>
+    </div>
+  </div>
+  <div id="announce"></div>
+  <div id="skillsBar"></div>
+</div>
+
+<!-- ===== 升级弹窗 ===== -->
+<div class="modal" id="upgModal">
+  <div class="panel">
+    <h2>升级！</h2>
+    <div class="sub" id="upgSub">选择一个技能强化你的角色</div>
+    <div class="upgCards" id="upgCards"></div>
+  </div>
+</div>
+
+<!-- ===== 结束弹窗 ===== -->
+<div class="modal" id="endModal">
+  <div class="panel result" id="endPanel">
+    <h2 id="endTitle">胜利！</h2>
+    <div class="sub" id="endSub">你击杀了终极怪物，通关成功</div>
+    <div id="endStats"></div>
+    <div class="rowBtns">
+      <button class="btn primary" id="againBtn">再来一局</button>
+      <button class="btn ghost" id="menuBtn">返回主菜单</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 主菜单弹窗 ===== -->
+<div class="modal" id="menuModal">
+  <div class="panel" id="menuBox">
+    <h2>青草物语 · 割草求生</h2>
+    <div class="sub">卡通 3D 俯视角割草生存 · 单局 15 分钟 · 杀怪捡金币升级</div>
+    <img id="uiBanner" alt="角色选择界面" src="assets/ui-banner.jpg">
+    <div class="coinLine" id="menuCoins">累计金币：0</div>
+    <div class="roleGrid" id="roleGrid"></div>
+    <div class="rowBtns">
+      <button class="btn primary" id="startBtn">开始冒险（小勇士）</button>
+    </div>
+    <div class="menuHint">操作：<b>WASD</b> 移动 · <b>鼠标拖动</b> 微调视角 · 角色自动放技能<br/>击杀怪物获得经验升级，每级三选一技能；掉落金币/血瓶/buff 自动拾取。死亡即失败，活到第 15 分钟击杀终极怪物即可通关。</div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script>
+/* ==== 全局常量与工具 ==== */
+const GRASS_COLORS = [0x6fcf6a, 0x7fcf58, 0x63c96f, 0x7cd172];
+
+
+const ALL_TEX = {
+  warrior: {
+    face:'D:\develop\claudecode-workspace\claude_5\工具网页\割草游戏\assets\char_warrior_face.png', back:'D:\develop\claudecode-workspace\claude_5\工具网页\割草游戏\assets\char_warrior_back.png', left:'D:\develop\claudecode-workspace\claude_5\工具网页\割草游戏\assets\char_warrior_left.png', right:'D:\develop\claudecode-workspace\claude_5\工具网页\割草游戏\assets\char_warrior_right.png' },
+  mage: {
+    face:'D:\develop\claudecode-workspace\claude_5\工具网页\割草游戏\assets\char_mage_face.png', back:'D:\develop\claudecode-workspace\claude_5\工具网页\割草游戏\assets\char_mage_back.png', left:'D:\develop\claudecode-workspace\claude_5\工具网页\割草游戏\assets\char_mage_left.png', right:'D:\develop\claudecode-workspace\claude_5\工具网页\割草游戏\assets\char_mage_right.png' },
+  ranger: {
+    face:'D:\develop\claudecode-workspace\claude_5\工具网页\割草游戏\assets\char_ranger_face.png', back:'D:\develop\claudecode-workspace\claude_5\工具网页\割草游戏\assets\char_ranger_back.png', left:'D:\develop\claudecode-workspace\claude_5\工具网页\割草游戏\assets\char_ranger_left.png', right:'D:\develop\claudecode-workspace\claude_5\工具网页\割草游戏\assets\char_ranger_right.png' },
+  priest: {
+    face:'D:\develop\claudecode-workspace\claude_5\工具网页\割草游戏\assets\char_priest_face.png', back:'D:\develop\claudecode-workspace\claude_5\工具网页\割草游戏\assets\char_priest_back.png', left:'D:\develop\claudecode-workspace\claude_5\工具网页\割草游戏\assets\char_priest_left.png', right:'D:\develop\claudecode-workspace\claude_5\工具网页\割草游戏\assets\char_priest_right.png' },
+  berserk: {
+    face:'D:\develop\claudecode-workspace\claude_5\工具网页\割草游戏\assets\char_berserk_face.png', back:'D:\develop\claudecode-workspace\claude_5\工具网页\割草游戏\assets\char_berserk_back.png', left:'D:\develop\claudecode-workspace\claude_5\工具网页\割草游戏\assets\char_berserk_left.png', right:'D:\develop\claudecode-workspace\claude_5\工具网页\割草游戏\assets\char_berserk_right.png' },
+  scholar: {
+    face:'D:\develop\claudecode-workspace\claude_5\工具网页\割草游戏\assets\char_scholar_face.png', back:'D:\develop\claudecode-workspace\claude_5\工具网页\割草游戏\assets\char_scholar_back.png', left:'D:\develop\claudecode-workspace\claude_5\工具网页\割草游戏\assets\char_scholar_left.png', right:'D:\develop\claudecode-workspace\claude_5\工具网页\割草游戏\assets\char_scholar_right.png' }
+};
+const $ = id => document.getElementById(id);
+
+/* ===== 数据定义 ===== */
+
+// 角色贴图全局预加载：纹理就绪后才挂载到 Sprite，避免渲染未就绪纹理导致崩溃
+const ALL_READY = {};
+const ALL_MATS = {};
+Object.keys(ALL_TEX).forEach(role=>{
+  ALL_READY[role] = { face:false, back:false, left:false, right:false };
+  ALL_MATS[role] = {};
+});
+(function preloadRoleTex(){
+  const l = new THREE.TextureLoader();
+  Object.keys(ALL_TEX).forEach(role=>{
+    ['face','back','left','right'].forEach(k=>{
+      l.load(ALL_TEX[role][k], tex=>{
+        tex.colorSpace = THREE.SRGBColorSpace;
+        ALL_MATS[role][k] = new THREE.SpriteMaterial({ map:tex, transparent:true, depthWrite:false });
+        ALL_READY[role][k] = true;
+      }, undefined, ()=>{});
+    });
+  });
+})();
+// 人类角色（局外金币解锁，局内初始被动）
+const ROLES = [
+  { id:'warrior',  name:'小勇士', price:0,    icon:'🗡', color:0xff7aa2, passive:'生命+30，普攻伤害+15%',
+    stats:{ maxHp:130, atkMul:1.15, speed:5.5, expMul:1 } },
+  { id:'mage',     name:'小法师', price:200,  icon:'🔮', color:0x8a6bff, passive:'自带火球术Lv1，技能冷却-10%',
+    stats:{ maxHp:100, atkMul:1, speed:5.2, expMul:1 }, grantSkills:['fireball'] },
+  { id:'ranger',   name:'小游侠', price:300,  icon:'🏹', color:0x4f8cff, passive:'移速+18%，火球射速更快',
+    stats:{ maxHp:90, atkMul:1, speed:6.5, expMul:1 } },
+  { id:'priest',   name:'小牧师', price:500,  icon:'✨', color:0xffce4d, passive:'自带再生被动Lv1，血瓶效果+50%',
+    stats:{ maxHp:110, atkMul:1, speed:5.2, expMul:1 }, grantPassives:['regen'] },
+  { id:'berserk',  name:'小狂战', price:600,  icon:'⚔', color:0xff6b6b, passive:'攻击+25%但移速-5%，自带坚韧Lv1',
+    stats:{ maxHp:125, atkMul:1.25, speed:5.2, expMul:1 }, grantPassives:['tough'] },
+  { id:'scholar',  name:'小学者', price:800,  icon:'🎓', color:0x3a8fbf, passive:'经验获取+25%，升级可多刷新1次',
+    stats:{ maxHp:95, atkMul:1, speed:5.4, expMul:1.25 } }
+];
+
+// 技能池：active=主动（自动释放），passive=被动（常驻）
+const SKILLS = {
+  fireball:{ id:'fireball', name:'火球术', type:'active', icon:'🔥', color:0xff8a3c, cd:1.6, desc:'朝最近敌人发射火球，爆炸范围伤害',
+    cast:(p)=>p.abilities.castFireball(),
+    level:function(l){ return { damage:30+10*l, count:1+Math.floor(l/3), speed:11+l*1.4 }; } },
+  frostnova:{ id:'frostnova', name:'冰霜新星', type:'active', icon:'❄', color:0x8ad4ff, cd:4, desc:'自身周围冰环，冰冻并减速敌人',
+    cast:(p)=>p.abilities.castFrostnova(),
+    level:function(l){ return { damage:40+13*l, radius:3.2+l*0.6, slow:0.5, slowTime:1.2+l*0.25 }; } },
+  lightning:{ id:'lightning', name:'闪电链', type:'active', icon:'⚡', color:0xffce4d, cd:2.2, desc:'电击最近敌人并弹射多个目标',
+    cast:(p)=>p.abilities.castLightning(),
+    level:function(l){ return { damage:25+9*l, chains:2+l, range:6+l*0.8 }; } },
+  blade:{ id:'blade', name:'旋风飞刃', type:'active', icon:'🌀', color:0x79c96b, cd:0.5, desc:'环绕自身的旋转飞刃持续切割',
+    cast:(p)=>p.abilities.castBlade(),
+    level:function(l){ return { damage:12+5*l, count:1+l, radius:2.4+l*0.3 }; } },
+  holy:{ id:'holy', name:'神圣喷涌', type:'active', icon:'⭐', color:0xffffff, cd:3.5, desc:'圣光球自动追踪最近敌人',
+    cast:(p)=>p.abilities.castHoly(),
+    level:function(l){ return { damage:55+20*l, speed:9, homing:true }; } },
+  vine:{ id:'vine', name:'藤蔓缠绕', type:'active', icon:'🌿', color:0x3fae5a, cd:5, desc:'脚下生成缠绕区域束缚并持续伤害',
+    cast:(p)=>p.abilities.castVine(),
+    level:function(l){ return { damage:15+6*l, radius:2.8+l*0.5, duration:2.5+l*0.6 }; } },
+  atk:{ id:'atk', name:'攻击强化', type:'passive', icon:'💪', color:0xff6b6b, desc:'全部技能与普攻伤害+12%',
+    apply:(p,l)=>p.passives.atk += 0.12*l },
+  haste:{ id:'haste', name:'急速', type:'passive', icon:'👟', color:0x4f8cff, desc:'移动速度+10%',
+    apply:(p,l)=>p.passives.haste += 0.10*l },
+  tough:{ id:'tough', name:'坚韧', type:'passive', icon:'🛡', color:0x8a6bff, desc:'最大生命+25',
+    apply:(p,l)=>{ p.passives.tough += 25*l; p.maxHp = p.baseMaxHp + p.passives.tough; if(p.hp>p.maxHp)p.hp=p.maxHp; } },
+  cdr:{ id:'cdr', name:'回能', type:'passive', icon:'⏱', color:0xffce4d, desc:'技能冷却-12%',
+    apply:(p,l)=>p.passives.cdr += 0.12*l },
+  greed:{ id:'greed', name:'贪婪', type:'passive', icon:'💰', color:0xffd24d, desc:'金币与经验获取+15%',
+    apply:(p,l)=>p.passives.greed += 0.15*l },
+  regen:{ id:'regen', name:'再生', type:'passive', icon:'❤', color:0xff7aa2, desc:'每秒回复0.5生命',
+    apply:(p,l)=>p.passives.regen += 0.5*l }
+};
+
+// 怪物基础模板
+const MONSTER_TYPES = {
+  slime:  { name:'史莱姆',  color:0x5fcf7f, hp:10,  speed:1.7, radius:0.45, exp:3,  gold:[0,2] },
+  ghost:  { name:'幽灵',    color:0xb39fff, hp:22,  speed:2.1, radius:0.5,  exp:6,  gold:[1,3] },
+  runner: { name:'冲刺鬼',  color:0xffce6b, hp:16,  speed:3.2, radius:0.42, exp:7,  gold:[1,3] },
+  brute:  { name:'石魔',    color:0x8a9a6a, hp:60,  speed:1.1, radius:0.9,  exp:15, gold:[4,7], boss:false },
+  boss:   { name:'魔像BOSS',color:0x8a6bff, hp:400, speed:0.9, radius:2.0,  exp:80, gold:[40,60], boss:true },
+  final:  { name:'终极魔帝', color:0xff4d5a, hp:2500,speed:0.8, radius:2.8,  exp:400,gold:[200,200], boss:true, final:true }
+};
+
+// 存档键
+const SAVE_KEY = 'grass-mow-save';
+// 拾取物掉落常量
+const DROP_RATE = { gold:0.30, potion:0.06, buff:0.04 };
+/* ===== 存档（localStorage） ===== */
+const defaultSave = { totalCoins:0, unlocked:['warrior'], records:[] };
+let save = loadSave();
+function loadSave(){
+  try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); return Object.assign({}, defaultSave, s); }
+  catch(e){ return { ...defaultSave }; }
+}
+function persistSave(){ try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch(e){} }
+function isUnlocked(id){ return save.unlocked.includes(id); }
+// 解锁角色（扣金币）
+function unlockRole(id){
+  const r = ROLES.find(x=>x.id===id); if(!r||isUnlocked(id)) return false;
+  if(save.totalCoins < r.price) return false;
+  save.totalCoins -= r.price; save.unlocked.push(id); persistSave(); return true;
+}
+// 结算：累加金币 + 记录
+function settleRun(roleId, aliveTime, kills, won, gained){
+  save.totalCoins += gained; 
+  save.records.push({ role:roleId, time:aliveTime, kills, won, coins:gained, at:Date.now() });
+  if(save.records.length>50) save.records.shift();
+  persistSave();
+}
+/* ===== 场景与渲染器 ===== */
+const gameRoot = $('game');
+const scene = new THREE.Scene();
+// 明亮清新天空：渐变背景
+scene.background = new THREE.Color(0x9cd6f0);
+scene.fog = new THREE.Fog(0x9cd6f0, 60, 160);
+
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+// 像素比上限 2，移动端更低
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+gameRoot.appendChild(renderer.domElement);
+
+// 相机：上帝俯视角（斜俯视），限位极角与距离
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 400);
+const CAM = { dist:26, height:22, angYaw:0 }; // dist=水平半径, height=相机高度
+// 相机围绕玩家，yaw 可被鼠标拖动微调；极角固定，距离限位在 [18,40]
+function updateCamera(playerPos){
+  const dist = THREE.MathUtils.clamp(CAM.dist, 18, 40);
+  const targetX = playerPos.x + Math.sin(CAM.angYaw)*dist;
+  const targetZ = playerPos.z + Math.cos(CAM.angYaw)*dist;
+  camera.position.set(targetX, CAM.height, targetZ);
+  camera.lookAt(playerPos.x, 0, playerPos.z);
+}
+
+// 光照：主光(太阳) + 补光(暖) + 环境光(天空)，避免死平
+const sun = new THREE.DirectionalLight(0xfff6d8, 1.4);
+sun.position.set(30, 40, 20); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.left = -40; sun.shadow.camera.right = 40;
+sun.shadow.camera.top = 40; sun.shadow.camera.bottom = -40;
+sun.shadow.camera.far = 100;
+scene.add(sun);
+
+const fill = new THREE.DirectionalLight(0xffe0b0, 0.5);
+fill.position.set(-20, 25, -15); scene.add(fill);
+
+const hemi = new THREE.HemisphereLight(0xbfe7ff, 0x6fcf6a, 0.55);
+scene.add(hemi);
+
+// resize 处理
+window.addEventListener('resize', ()=>{
+  camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+/* ===== 地貌系统：草地/沙漠/山川/河流 随机分布 ===== */
+const BIOME_COLORS = {
+  grass:   [0x6fcf6a, 0x7fcf58, 0x63c96f, 0x7cd172], // 草地
+  desert:  [0xe8c877, 0xe6c06a, 0xf0d080, 0xddb86a], // 沙漠
+  mountain:[0x9aa0a8, 0x8d949d, 0xa6abb3, 0x848a93], // 山川
+  river:   [0x7ec8e3, 0x69b7d8, 0x8fd4e6, 0x63b4dd]  // 河流
+};
+// 地貌：平滑噪声场决定（value noise）→ 非方格拼接、斑块大小随机
+const BIO_CELL = 48; // 地貌种子网格间距（比块大，产生大地貌斑块）
+function bioNoise(ci,cj){ return rng(ci*104729, cj*15485863); }
+function biomeField(x,z){
+  const cx=Math.floor(x/BIO_CELL), cz=Math.floor(z/BIO_CELL);
+  const fx=(x-cx*BIO_CELL)/BIO_CELL, fz=(z-cz*BIO_CELL)/BIO_CELL;
+  const sx=fx*fx*(3-2*fx), sz=fz*fz*(3-2*fz);
+  const v00=bioNoise(cx,cz),v10=bioNoise(cx+1,cz),v01=bioNoise(cx,cz+1),v11=bioNoise(cx+1,cz+1);
+  return v00*(1-sx)*(1-sz)+v10*sx*(1-sz)+v01*(1-sx)*sz+v11*sx*sz;
+}
+function biomeOf(x,z){ // 世界坐标
+  const v=biomeField(x,z);
+  if(v<0.45) return 'grass';      // 草地
+  if(v<0.70) return 'desert';     // 沙漠
+  if(v<0.90) return 'mountain';   // 山川
+  return 'river';                 // 河流
+}
+function biomeColor(x,z){
+  const b=biomeOf(x,z);
+  const arr=BIOME_COLORS[b];
+  return arr[Math.floor(rng(Math.floor(x)*31, Math.floor(z)*57)*arr.length)];
+}
+// 卡通地形起伏：低频平滑高度噪声，各地貌起伏幅度不同
+function heightNoise(x,z){
+  const c=26, cx=Math.floor(x/c), cz=Math.floor(z/c);
+  const fx=(x-cx*c)/c, fz=(z-cz*c)/c;
+  const sx=fx*fx*(3-2*fx), sz=fz*fz*(3-2*fz);
+  const v00=rng(cx*97,cz*163),v10=rng((cx+1)*97,cz*163),v01=rng(cx*97,(cz+1)*163),v11=rng((cx+1)*97,(cz+1)*163);
+  return v00*(1-sx)*(1-sz)+v10*sx*(1-sz)+v01*(1-sx)*sz+v11*sx*sz;
+}
+function groundHeight(x,z,biome){
+  const n=heightNoise(x,z);
+  if(biome==='mountain') return 1.0*n;   // 山川起伏大
+  if(biome==='desert')   return 0.5*n;   // 沙丘起伏
+  if(biome==='grass')    return 0.24*n;  // 草地微起伏
+  return 0.06*n;                          // 河流平坦
+}
+// 沙漠仙人掌（阻挡）
+function buildCactus(px,pz,seed){
+  const g = new THREE.Group();
+  const green = new THREE.MeshLambertMaterial({color:0x5caf62});
+  const dark  = new THREE.MeshLambertMaterial({color:0x4a9850});
+  const h = 1.1 + seed*0.8;
+  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.26,h,7), green); stem.position.set(px,h/2,pz); stem.castShadow=true;
+  const armMat = seed>0.5? green : dark;
+  const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.13,0.15,0.7,6), armMat); arm.position.set(px+(seed>0.5?0.42:-0.42), h*0.55, pz); arm.rotation.z = seed>0.5?-0.5:0.5;
+  const armTip = new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.12,0.5,6), armMat); armTip.position.set(px+(seed>0.5?0.72:-0.72), h*0.42, pz); armTip.rotation.z = seed>0.5?-0.9:0.9;
+  const bloom = new THREE.Mesh(new THREE.SphereGeometry(0.16,8,6), new THREE.MeshLambertMaterial({color:0xff8fd0})); bloom.position.set(px,h+0.14,pz);
+  g.add(stem,arm,armTip,bloom);
+  return g;
+}
+// 山川高石山（阻挡，比岩石更大更挺拔）
+function buildMountainRock(px,pz,seed){
+  const g = new THREE.Group();
+  const shades=[0x8d949d,0x7d8791,0x9aa0a8];
+  const main = new THREE.Mesh(new THREE.ConeGeometry(1.0+seed*0.5, 2.2+seed*0.9, 7), new THREE.MeshLambertMaterial({color:shades[Math.floor(seed*3)]}));
+  main.position.set(px, 1.1+seed*0.45, pz); main.castShadow=true;
+  const snow = new THREE.Mesh(new THREE.ConeGeometry((1.0+seed*0.5)*0.5, 0.7, 7), new THREE.MeshLambertMaterial({color:0xeef3f7}));
+  snow.position.set(px, 1.95+seed*0.75, pz);
+  g.add(main, snow);
+  const rubbleMat = new THREE.MeshLambertMaterial({color:0x737c86});
+  for(let i=0;i<3;i++){
+    const rr=0.3+rng(px*11+i,pz*13+i)*0.35;
+    const rock=new THREE.Mesh(new THREE.DodecahedronGeometry(rr,0), rubbleMat);
+    rock.position.set(px+(rng(px*7+i,pz*3+i)-0.5)*1.2, 0.25, pz+(rng(px*17+i,pz*5+i)-0.5)*1.2);
+    g.add(rock);
+  }
+  return g;
+}
+
+/* ===== 地图：无限程序化随机生成 ===== */
+const MAP_CELL = 16; // 分块大小，按块懒生成
+const chunkMap = new Map(); // "x,z" -> { grass, obstacles }
+// 简单确定性哈希（同坐标永远同随机，Math.imul 避免 32 位溢出偏置，保证均匀分布）
+function rng(x,z){
+  let h = (Math.imul(x|0,0x9E3779B1) + Math.imul(z|0,0x85EBCA6B)) >>> 0;
+  h = Math.imul(h ^ (h>>>16), 0x21E0E4F9) >>> 0;
+  h = Math.imul(h ^ (h>>>15), 0x735A2D97) >>> 0;
+  h = (h ^ (h>>>15)) >>> 0;
+  return h / 4294967296;
+}
+
+// 障碍物列表（用于碰撞），记录在块内
+const obstacleList = []; // {x,z,r} 阻挡玩家与怪物
+// 卡通阔叶树 / 松树：贴图精灵（billboard 自动面向相机），比几何体更精致
+const TREE_TEX = {
+  leaf: 'D:\develop\claudecode-workspace\claude_5\工具网页\割草游戏\assets\tree_leaf.png',
+  pine: 'D:\develop\claudecode-workspace\claude_5\工具网页\割草游戏\assets\tree_pine.png'
+};
+// 共享材质：加载完成前为空（不渲染），就绪后挂 map 自动显示
+const TREE_MATS = {
+  leaf: new THREE.SpriteMaterial({ transparent:true, depthWrite:false }),
+  pine: new THREE.SpriteMaterial({ transparent:true, depthWrite:false })
+};
+const TREE_READY = { leaf:false, pine:false };
+(function preloadTree(){
+  const l = new THREE.TextureLoader();
+  l.load(TREE_TEX.leaf, t=>{ t.colorSpace=THREE.SRGBColorSpace; TREE_MATS.leaf.map=t; TREE_MATS.leaf.needsUpdate=true; TREE_READY.leaf=true; }, undefined, ()=>{});
+  l.load(TREE_TEX.pine, t=>{ t.colorSpace=THREE.SRGBColorSpace; TREE_MATS.pine.map=t; TREE_MATS.pine.needsUpdate=true; TREE_READY.pine=true; }, undefined, ()=>{});
+})();
+function buildTree(px, pz, seed){
+  const spr = new THREE.Sprite(TREE_MATS.leaf);
+  spr.scale.set(2.9, 3.3, 1);  // 加高
+  spr.position.set(px, 1.65, pz);
+  spr.renderOrder = 1;
+  return spr;
+}
+
+// 场景地标记录（喷泉/塔楼），供 BOSS 战作参照
+const landmarks = [];
+// 卡通松树：贴图精灵
+function buildPine(px,pz,seed){
+  const spr = new THREE.Sprite(TREE_MATS.pine);
+  spr.scale.set(2.0, 3.2, 1);  // 加高
+  spr.position.set(px, 1.6, pz);
+  spr.renderOrder = 1;
+  return spr;
+}
+// 障碍物贴图系统：6 种卡通道具（岩石/喷泉/木桶/木箱/栅栏桩/塔楼）贴图精灵
+const OBST_TEX = {
+  rockpile:'D:\develop\claudecode-workspace\claude_5\工具网页\割草游戏\assets\obst_rockpile.png', fountain:'D:\develop\claudecode-workspace\claude_5\工具网页\割草游戏\assets\obst_fountain.png',
+  barrel:'D:\develop\claudecode-workspace\claude_5\工具网页\割草游戏\assets\obst_barrel.png', crate:'D:\develop\claudecode-workspace\claude_5\工具网页\割草游戏\assets\obst_crate.png',
+  fence:'D:\develop\claudecode-workspace\claude_5\工具网页\割草游戏\assets\obst_fence.png', tower:'D:\develop\claudecode-workspace\claude_5\工具网页\割草游戏\assets\obst_tower.png'
+};
+const OBST_MATS = {
+  rockpile:new THREE.SpriteMaterial({transparent:true,depthWrite:false}),
+  fountain:new THREE.SpriteMaterial({transparent:true,depthWrite:false}),
+  barrel:new THREE.SpriteMaterial({transparent:true,depthWrite:false}),
+  crate:new THREE.SpriteMaterial({transparent:true,depthWrite:false}),
+  fence:new THREE.SpriteMaterial({transparent:true,depthWrite:false}),
+  tower:new THREE.SpriteMaterial({transparent:true,depthWrite:false})
+};
+const OBST_READY = {};
+(function preloadObst(){
+  const l=new THREE.TextureLoader();
+  ['rockpile','fountain','barrel','crate','fence','tower'].forEach(k=>{
+    OBST_READY[k]=false;
+    l.load(OBST_TEX[k], t=>{ t.colorSpace=THREE.SRGBColorSpace; OBST_MATS[k].map=t; OBST_MATS[k].needsUpdate=true; OBST_READY[k]=true; }, undefined, ()=>{});
+  });
+})();
+// 岩石堆（卡通贴图精灵）
+function buildRockPile(px,pz,seed,r){
+  const spr = new THREE.Sprite(OBST_MATS.rockpile);
+  spr.scale.set(2.6, 0.8, 1); spr.position.set(px, 0.4, pz); spr.renderOrder=1;
+  return spr;
+}
+// 石质喷泉（地标，卡通贴图精灵）
+function buildFountain(px,pz,seed){
+  const spr = new THREE.Sprite(OBST_MATS.fountain);
+  spr.scale.set(2.6, 2.6, 1); spr.position.set(px, 1.3, pz); spr.renderOrder=1;
+  return spr;
+}
+// 木桶（可破坏，卡通贴图精灵）
+function buildBarrel(px,pz,seed){
+  const spr = new THREE.Sprite(OBST_MATS.barrel);
+  spr.scale.set(1.6, 1.07, 1); spr.position.set(px, 0.55, pz); spr.renderOrder=1;
+  return spr;
+}
+// 木箱（可破坏，卡通贴图精灵）
+function buildCrate(px,pz,seed){
+  const spr = new THREE.Sprite(OBST_MATS.crate);
+  spr.scale.set(1.5, 1.26, 1); spr.position.set(px, 0.63, pz); spr.renderOrder=1;
+  return spr;
+}
+// 栅栏柱（尖顶木桩，卡通贴图精灵）
+function buildFencePost(px,pz,seed){
+  const spr = new THREE.Sprite(OBST_MATS.fence);
+  spr.scale.set(1.0, 1.0, 1); spr.position.set(px, 0.5, pz); spr.renderOrder=1;
+  return spr;
+}
+// 破损塔楼/废墟石柱（地标，卡通贴图精灵）
+function buildRuinTower(px,pz,seed){
+  const spr = new THREE.Sprite(OBST_MATS.tower);
+  spr.scale.set(2.0, 1.9, 1); spr.position.set(px, 0.95, pz); spr.renderOrder=1;
+  return spr;
+}
+// 击碎可破坏物：移除模型、掉金币
+function breakObstacle(ob){
+  ob.destroyed = true;
+  if(ob.mesh && ob.mesh.parent) ob.mesh.parent.remove(ob.mesh);
+  const v = 4 + Math.floor(Math.random()*5);
+  dropCoin(ob.x, ob.z, v);
+  floatText('击碎 +'+v+' 金币','#ffd24d');
+}
+function buildChunk(cx, cz){
+  const key = cx+','+cz;
+  if(chunkMap.has(key)) return;
+  const group = new THREE.Group();
+  // 地貌地面：细分 plane + 逐顶点地貌色 + 卡通起伏（无方格拼接）
+  const biome = biomeOf(cx*MAP_CELL + MAP_CELL/2, cz*MAP_CELL + MAP_CELL/2);
+  const SEG = 5;
+  const gGeo = new THREE.PlaneGeometry(MAP_CELL, MAP_CELL, SEG, SEG);
+  gGeo.rotateX(-Math.PI/2);
+  const posA = gGeo.attributes.position;
+  const colors = new Float32Array(posA.count*3);
+  for(let i=0;i<posA.count;i++){
+    const wx = cx*MAP_CELL + MAP_CELL/2 + posA.getX(i);
+    const wz = cz*MAP_CELL + MAP_CELL/2 + posA.getZ(i);
+    const b = biomeOf(wx, wz);
+    const arr = BIOME_COLORS[b];
+    const c = arr[Math.floor(rng(Math.floor(wx)*31, Math.floor(wz)*57)*arr.length)];
+    colors[i*3]=((c>>16)&255)/255; colors[i*3+1]=((c>>8)&255)/255; colors[i*3+2]=(c&255)/255;
+    posA.setY(i, groundHeight(wx, wz, b));
+  }
+  gGeo.setAttribute('color', new THREE.BufferAttribute(colors,3));
+  gGeo.computeVertexNormals();
+  const gMat = new THREE.MeshLambertMaterial({ vertexColors:true });
+  const grass = new THREE.Mesh(gGeo, gMat);
+  grass.position.set(cx*MAP_CELL + MAP_CELL/2, 0, cz*MAP_CELL + MAP_CELL/2);
+  grass.receiveShadow = true;
+  group.add(grass);
+
+  // 块内随机障碍物：阔叶树/松树/岩石堆/栅栏柱(阻挡) + 木桶/箱子(可破坏) + 喷泉/塔楼(地标)
+  const seed = rng(cx+999, cz+777);
+  const obstacleCount = 4 + Math.floor(seed*5);
+  const chunkX0 = cx*MAP_CELL, chunkZ0 = cz*MAP_CELL;
+  // 地标：每块约25%概率生成一座喷泉或塔楼（场景参照 / BOSS 战参照物）
+  if(rng(cx*17, cz*29) < 0.25){
+    const lm = rng(cx*71, cz*41);
+    const lx = chunkX0 + MAP_CELL*0.5 + (rng(cx*3,cz*5)-0.5)*4;
+    const lz = chunkZ0 + MAP_CELL*0.5 + (rng(cx*11,cz*7)-0.5)*4;
+    const gy = groundHeight(lx, lz, biomeOf(lx,lz));
+    if(lm < 0.5){
+      const f=buildFountain(lx, lz, lm); f.position.y += gy; group.add(f);
+      obstacleList.push({ x:lx, z:lz, r:1.6, type:'fountain', kind:'block' });
+      landmarks.push({ x:lx, z:lz, type:'fountain' });
+    } else {
+      const tw=buildRuinTower(lx, lz, lm); tw.position.y += gy; group.add(tw);
+      obstacleList.push({ x:lx, z:lz, r:1.5, type:'tower', kind:'block' });
+      landmarks.push({ x:lx, z:lz, type:'tower' });
+    }
+  }
+  // 障碍数量：河流地块显著稀疏
+  const obsCount = biome==='river' ? Math.max(1, obstacleCount-3) : obstacleCount;
+  for(let i=0;i<obsCount;i++){
+    const s1 = rng(cx*31+i, cz*17+i);
+    const px = chunkX0 + 1.5 + s1*(MAP_CELL-3);
+    const s2 = rng(cx*53+i, cz*29+i);
+    const pz = chunkZ0 + 1.5 + s2*(MAP_CELL-3);
+    const s3 = rng(cx*73+i, cz*43+i);
+    // 类型权重随地貌变化
+    let kind;
+    if(biome==='desert'){ // 沙漠：仙人掌+岩石+栅栏+可破坏
+      if(s3<0.30) kind='cactus';
+      else if(s3<0.52) kind='rock';
+      else if(s3<0.70) kind='fence';
+      else if(s3<0.86) kind='barrel';
+      else kind='crate';
+    } else if(biome==='mountain'){ // 山川：石山+岩石+栅栏
+      if(s3<0.40) kind='mrock';
+      else if(s3<0.62) kind='rock';
+      else if(s3<0.82) kind='fence';
+      else if(s3<0.93) kind='crate';
+      else kind='barrel';
+    } else if(biome==='river'){ // 河流：稀疏的小石+木桶+箱子
+      if(s3<0.5) kind='rock';
+      else if(s3<0.75) kind='barrel';
+      else kind='crate';
+    } else { // 草地：阔叶树+松树+岩石+栅栏+可破坏
+      if(s3<0.22) kind='tree';
+      else if(s3<0.40) kind='pine';
+      else if(s3<0.56) kind='rock';
+      else if(s3<0.74) kind='fence';
+      else if(s3<0.86) kind='barrel';
+      else kind='crate';
+    }
+    const isBreakable = (kind==='barrel'||kind==='crate');
+    const radius = kind==='fence' ? 0.35 : kind==='barrel' ? 0.5 : kind==='crate' ? 0.6 : kind==='rock' ? (0.55+s3*0.4) : kind==='cactus' ? 0.4 : kind==='mrock' ? (1.1+s3*0.5) : 0.5;
+    let ob = { x:px, z:pz, r:radius, type:kind, kind:isBreakable?'breakable':'block' };
+    const gy = groundHeight(px, pz, biomeOf(px,pz));
+    if(kind==='tree'){ const m=buildTree(px, pz, s3); m.position.y += gy; group.add(m); }
+    else if(kind==='pine'){ const m=buildPine(px, pz, s3); m.position.y += gy; group.add(m); }
+    else if(kind==='rock'){ const m=buildRockPile(px, pz, s3, radius); m.position.y += gy; group.add(m); }
+    else if(kind==='cactus'){ const m=buildCactus(px, pz, s3); m.position.y += gy; group.add(m); }
+    else if(kind==='mrock'){ const m=buildMountainRock(px, pz, s3); m.position.y += gy; group.add(m); }
+    else if(kind==='fence'){ const m=buildFencePost(px, pz, s3); m.position.y += gy; group.add(m); }
+    else if(kind==='barrel'){ const b=buildBarrel(px,pz,s3); b.position.y += gy; group.add(b); ob.mesh=b; ob.hp=25; }
+    else { const c=buildCrate(px,pz,s3); c.position.y += gy; group.add(c); ob.mesh=c; ob.hp=35; }
+    obstacleList.push(ob);
+  }
+  scene.add(group);
+  chunkMap.set(key, { group });
+}
+
+// 懒加载玩家周围块
+function updateChunks(px, pz){
+  const cxc = Math.floor(px/MAP_CELL), czc = Math.floor(pz/MAP_CELL);
+  for(let dx=-2;dx<=2;dx++) for(let dz=-2;dz<=2;dz++) buildChunk(cxc+dx, czc+dz);
+}
+
+// 障碍物碰撞：把实体(玩家/怪物)推出圆形障碍
+function collideObstacles(pos, radius){
+  for(const o of obstacleList){
+    if(o.destroyed) continue;
+    const ddx = pos.x-o.x, ddz = pos.z-o.z;
+    const dist = Math.hypot(ddx,ddz);
+    const min = radius + o.r;
+    if(dist < min){
+      if(dist===0){ pos.x = o.x+min; pos.z = o.z; }
+      else { pos.x = o.x + ddx/dist*min; pos.z = o.z + ddz/dist*min; }
+    }
+  }
+}
+/* ===== 玩家 ===== */
+const keys = { w:false,a:false,s:false,d:false };
+window.addEventListener('keydown', e=>{ if(e.key==='w'||e.key==='W')keys.w=true; if(e.key==='a'||e.key==='A')keys.a=true; if(e.key==='s'||e.key==='S')keys.s=true; if(e.key==='d'||e.key==='D')keys.d=true; });
+window.addEventListener('keyup',   e=>{ if(e.key==='w'||e.key==='W')keys.w=false; if(e.key==='a'||e.key==='A')keys.a=false; if(e.key==='s'||e.key==='S')keys.s=false; if(e.key==='d'||e.key==='D')keys.d=false; });
+
+// 鼠标拖动微调相机 yaw
+let dragging=false, lastMX=0;
+window.addEventListener('mousedown', e=>{ if(e.button===0){ dragging=true; lastMX=e.clientX; } });
+window.addEventListener('mousemove', e=>{ if(dragging){ CAM.angYaw += (e.clientX-lastMX)*0.01; lastMX=e.clientX; } });
+window.addEventListener('mouseup',   ()=>dragging=false);
+
+// 构建玩家卡通3D模型（圆头+身体+手臂）
+function buildCharacter(color, role){
+  return buildSpriteRole(color, role);
+  const g = new THREE.Group();
+  const bodyMat = new THREE.MeshLambertMaterial({ color });
+  const headMat = new THREE.MeshLambertMaterial({ color:0xffd9b3 });
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.55,0.9,8), bodyMat); body.position.y=0.55; body.castShadow=true;
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.42,12,10), headMat); head.position.y=1.45; head.castShadow=true;
+  // 眼睛
+  const eyeMat = new THREE.MeshBasicMaterial({ color:0x233046 });
+  const eye = new THREE.Mesh(new THREE.SphereGeometry(0.08,8,6), eyeMat); eye.position.set(0.14,1.5,0.36);
+  const eye2 = eye.clone(); eye2.position.x=-0.14;
+  g.add(body,head,eye,eye2);
+  // 小帽（职业头饰）
+  const hatMat = new THREE.MeshLambertMaterial({ color });
+  const hat = new THREE.Mesh(new THREE.ConeGeometry(0.4,0.5,8), hatMat); hat.position.y=1.85; g.add(hat);
+  return g;
+}
+
+// 四向贴图角色（小勇士）：THREE.Sprite 自动 billboard 朝向相机，按移动方向切换帧，行走/攻击程序化动画
+function buildSpriteRole(color, role){
+  const g = new THREE.Group();
+  // 初始空材质（无 map），纹理就绪前不渲染，避免崩
+  const spr = new THREE.Sprite(new THREE.SpriteMaterial({ transparent:true, depthWrite:false }));
+  spr.scale.set(1.7, 2.5, 1); // 世界尺寸：宽1.7 高2.5
+  spr.position.y = 1.25;      // 底部贴地
+  g.add(spr);
+  g.userData.sprite = { spr, mats:ALL_MATS[role], ready:ALL_READY[role] };
+  return g;
+}
+// 每帧：四向帧切换 + 行走弹跳 + 攻击挥摆（Sprite 自动面向相机）
+function updateSpritePlayer(dt){
+  const sd = player.mesh.userData.sprite;
+  if(!sd) return;
+  const spr = sd.spr;
+  const dir = player.anim.dir || 'face';
+  const mat = spr.material;
+  if(sd.ready[dir] && sd.mats[dir]){
+    if(mat.map !== sd.mats[dir].map){ mat.map = sd.mats[dir].map; mat.needsUpdate = true; }
+  } else if(mat.map !== null){ mat.map = null; mat.needsUpdate = true; }
+  // 死亡状态：倒地 + 变灰 + 渐隐
+  if(player.anim.state==='dead'){
+    const k = 1 - Math.max(0, player.anim.deadT/1.1);   // 0 → 1 倒地进度
+    spr.position.y = 1.25*(1 - k*0.85);
+    spr.rotation.z = k*1.5;
+    spr.scale.set(1.7, 2.5*(1 - k*0.45), 1);
+    mat.transparent = true;
+    if(mat.color) mat.color.set(1, 1-0.55*k, 1-0.55*k);
+    if(k>0.55) mat.opacity = Math.max(0, 1-(k-0.55)/0.45);
+    mat.needsUpdate = true;
+    return;
+  }
+  // 受击状态：闪红 + 后仰回弹
+  if(player.anim.state==='hit'){
+    player.anim.hitT -= dt;
+    const k = Math.max(0, player.anim.hitT/0.35);
+    spr.position.y = 1.25 + 0.12*k;
+    spr.rotation.z = (1-k)*0.45;
+    if(mat.color) mat.color.set(1, 1-0.5*k, 1-0.5*k);
+    spr.scale.set(1.7, 2.5, 1);
+    if(player.anim.hitT<=0){
+      player.anim.state='idle'; player.anim.walk=false;
+      if(mat.color) mat.color.set(1,1,1);
+      mat.opacity = 1; mat.needsUpdate = true;
+    }
+    return;
+  }
+  if(player.anim.atkT>0){
+    player.anim.atkT -= dt;
+    const k = Math.max(0, player.anim.atkT/0.3);
+    spr.position.y = 1.25 + 0.12*Math.sin(k*Math.PI);
+    spr.rotation.z = 0.22*Math.sin(k*Math.PI);   // 屏幕内小挥摆模拟挥击
+    spr.scale.set(1.7+0.25*Math.sin(k*Math.PI), 2.5+0.25*Math.sin(k*Math.PI), 1);
+  } else {
+    if(player.anim.walk){
+      player.anim.bobT += dt*9;
+      spr.position.y = 1.25 + Math.abs(Math.sin(player.anim.bobT))*0.16;
+      spr.rotation.z = 0.08*Math.sin(player.anim.bobT*2);
+    } else {
+      spr.position.y = 1.25;
+      spr.rotation.z = 0;
+    }
+    spr.scale.set(1.7, 2.5, 1);
+  }
+}
+
+// 技能状态
+function makeAbilityState(){
+  return {
+    actives: [],       // [{skillId, level}]
+    passives: [],      // [{skillId, level}]
+    timers: {}         // active cooldown 计时
+  };
+}
+// 玩家全局状态
+let player = null;
+function initPlayer(role){
+  const R = ROLES.find(x=>x.id===role) || ROLES[0];
+  const mesh = buildCharacter(R.color, R.id);
+  scene.add(mesh);
+  player = {
+    role: role, mesh: mesh, pos: new THREE.Vector3(0,0,0),
+    baseMaxHp: R.stats.maxHp, hp: R.stats.maxHp, maxHp: R.stats.maxHp,
+    atkMul: R.stats.atkMul, speed: R.stats.speed, expMul: R.stats.expMul,
+    passives:{ atk:0, haste:0, tough:0, cdr:0, greed:0, regen:0 },
+    abilities: makeAbilityState(),
+    level: 1, exp: 0, expNeed: expNeedFor(1),
+    coins: 0, kills: 0,
+    hitCooldown: 0, dashTimer: 0,
+    anim: { dir:'face', walk:false, bobT:0, atkT:0, state:'idle', hitT:0, deadT:0, dead:false }
+  };
+  player.abilities.castFireball = castFireball;
+  player.abilities.castFrostnova = castFrostnova;
+  player.abilities.castLightning = castLightning;
+  player.abilities.castBlade = castBlade;
+  player.abilities.castHoly = castHoly;
+  player.abilities.castVine = castVine;
+  // 角色自带技能/被动
+  if(R.grantSkills) R.grantSkills.forEach(sid=>gainSkill(sid));
+  if(R.grantPassives) R.grantPassives.forEach(sid=>gainSkill(sid));
+  // 保底：开局至少一个主动技能，保证能自动打怪
+  if(player.abilities.actives.length===0) gainSkill('fireball');
+}
+function expNeedFor(lv){ return Math.round(8*Math.pow(lv+1,1.6)); }
+
+// 获得/升级技能：返回该技能的现有等级（新获得=1）
+function gainSkill(sid){
+  const ab = player.abilities;
+  const arr = SKILLS[sid].type==='active' ? ab.actives : ab.passives;
+  const ex = arr.find(a=>a.skillId===sid);
+  if(ex){ ex.level = Math.min(ex.level+1, 5); }
+  else { arr.push({ skillId:sid, level:1 }); if(SKILLS[sid].type==='active') ab.timers[sid]=0; }
+  // 应用被动
+  if(SKILLS[sid].type==='passive'){
+    const l = arr.find(a=>a.skillId===sid).level;
+    SKILLS[sid].apply(player, l);
+  }
+  renderSkillsBar();
+  return ex ? ex.level : 1;
+}
+
+// 增加经验并处理升级
+function addExp(amount){
+  player.exp += amount * (1+player.passives.greed) * player.expMul;
+  while(player.exp >= player.expNeed){
+    player.exp -= player.expNeed;
+    player.level++;
+    player.expNeed = expNeedFor(player.level);
+    openUpgradeModal();
+  }
+}
+
+// WASD 移动（每帧）
+function movePlayer(dt){
+  let mx=0, mz=0;
+  if(keys.w) mz-=1; if(keys.s) mz+=1; if(keys.a) mx-=1; if(keys.d) mx+=1;
+  if(mx||mz){
+    const len = Math.hypot(mx,mz); mx/=len; mz/=len;
+    let spd = player.speed * (1+player.passives.haste);
+    if(biomeOf(player.pos.x, player.pos.z)==='river') spd *= 0.5; // 河流减速
+    player.pos.x += mx*spd*dt; player.pos.z += mz*spd*dt;
+    collideObstacles(player.pos, 0.55);
+    player.mesh.position.copy(player.pos);
+    const isSprite = player.mesh.userData && player.mesh.userData.sprite;
+    if(isSprite){
+      // 四向贴图：按移动方向相对屏幕的方向切换帧
+      const camDir = new THREE.Vector3(); camera.getWorldDirection(camDir);
+      const lookH = new THREE.Vector2(camDir.x, camDir.z);
+      if(lookH.lengthSq()>1e-4) lookH.normalize();
+      const rightH = new THREE.Vector2(-lookH.y, lookH.x);
+      const dotF = mx*lookH.x + mz*lookH.y;
+      const dotR = mx*rightH.x + mz*rightH.y;
+      player.anim.dir = Math.abs(dotF)>=Math.abs(dotR) ? (dotF>=0?'back':'face') : (dotR>=0?'right':'left');
+      player.anim.walk = true;
+    } else {
+      // 3D 模型朝向移动方向
+      player.mesh.rotation.y = Math.atan2(mx,mz);
+    }
+  } else if(player.anim){
+    player.anim.walk = false;
+  }
+}
+
+// 玩家受击
+function damagePlayer(amount){
+  if(player.hitCooldown>0 || !player) return;
+  player.hp -= amount; player.hitCooldown=0.8;
+  if(player.hp>0 && player.mesh.userData && player.mesh.userData.sprite){
+    player.anim.state='hit'; player.anim.hitT=0.35;
+  }
+  updateHp();
+  if(player.hp<=0){
+    player.hp=0; updateHp();
+    if(player.mesh.userData && player.mesh.userData.sprite){
+      player.anim.state='dead'; player.anim.deadT=1.1; player.dying=true;
+      return;
+    }
+    endGame(false);
+  }
+}
+/* ===== 技能（主动施法与特效） ===== */
+const projectiles = []; // {mesh, dir, speed, damage, life, homing, skill}
+const effects = [];     // {mesh, life, update}
+// 特效材质：MeshBasicMaterial 不受光，天然发光
+function makeGlow(color, size){
+  const m = new THREE.Mesh(new THREE.SphereGeometry(size,10,8), new THREE.MeshBasicMaterial({ color, transparent:true, opacity:0.9 }));
+  return m;
+}
+// 特效环
+function makeRing(color, radius){
+  const m = new THREE.Mesh(new THREE.RingGeometry(radius*0.85,radius,24), new THREE.MeshBasicMaterial({ color, transparent:true, opacity:0.8, side:THREE.DoubleSide }));
+  m.rotation.x = -Math.PI/2; return m;
+}
+// 伤害怪物，返回是否击杀（处理血与金币）
+function hitMonster(m, dmg){
+  m.hp -= dmg;
+  if(m.hp<=0){ killMonster(m); return true; }
+  return false;
+}
+function killMonster(m){
+  if(m.dead) return;
+  m.dead = true;
+  player.kills++;
+  const type = m.type;
+  const gain = type.exp * (1+player.passives.greed);
+  addExp(gain);
+  // 金币
+  const g = type.gold[0]+Math.floor(Math.random()*(type.gold[1]-type.gold[0]+1));
+  dropCoin(m.pos.x, m.pos.z, g);
+  // 掉落
+  spawnDrops(m.pos.x, m.pos.z);
+  // 移除网格（延迟以播死亡特效）
+  effectBurst(m.pos.x, m.pos.z, type.color);
+  removeMonsterMesh(m);
+}
+
+function castFireball(){
+  const lv = getSkillLevel('fireball'); if(lv<1) return;
+  const cfg = SKILLS.fireball.level(lv);
+  const target = nearestMonster(player.pos);
+  if(!target) return;
+  const ang = Math.atan2(target.pos.x-player.pos.x, target.pos.z-player.pos.z);
+  const cnt = cfg.count;
+  for(let i=0;i<cnt;i++){
+    const a = ang + (i-(cnt-1)/2)*0.25;
+    const dir = new THREE.Vector3(Math.sin(a),0,Math.cos(a));
+    const m = makeGlow(0xff8a3c,0.35); m.position.copy(player.pos); m.position.y=0.8; scene.add(m);
+    projectiles.push({ mesh:m, dir, speed:cfg.speed, damage:cfg.damage*player.atkMul, life:1.6, skill:'fireball' });
+  }
+};
+function castFrostnova(){
+  const lv = getSkillLevel('frostnova'); if(lv<1) return;
+  const cfg = SKILLS.frostnova.level(lv);
+  const ring = makeRing(0x8ad4ff, cfg.radius); ring.position.set(player.pos.x,0.3,player.pos.z); scene.add(ring);
+  effects.push({ mesh:ring, life:0.5, update:(e,t)=>{ e.mesh.scale.setScalar(1+t*1.2); } });
+  // 范围伤害+减速
+  for(const mon of monsters){
+    if(mon.dead) continue;
+    const d = dist2D(mon.pos, player.pos);
+    if(d < cfg.radius+mon.type.radius){
+      hitMonster(mon, cfg.damage*player.atkMul);
+      mon.slow = cfg.slow; mon.slowTime = cfg.slowTime;
+    }
+  }
+};
+function castLightning(){
+  const lv = getSkillLevel('lightning'); if(lv<1) return;
+  const cfg = SKILLS.lightning.level(lv);
+  let cur = nearestMonster(player.pos, cfg.range);
+  let chain=0;
+  while(cur && chain<cfg.chains){
+    const bolt = makeGlow(0xffce4d,0.3); bolt.position.set(cur.pos.x,0.8,cur.pos.z); scene.add(bolt);
+    effects.push({ mesh:bolt, life:0.25, update:(e,t)=>e.mesh.scale.setScalar(1-t*0.5) });
+    hitMonster(cur, cfg.damage*player.atkMul);
+    chain++;
+    const prev = cur.pos;
+    cur = nearestMonster(prev, cfg.range, mon=>mon!==cur && !mon.dead);
+    // 下一个目标
+  }
+};
+function castBlade(){
+  const lv = getSkillLevel('blade'); if(lv<1) return;
+  const cfg = SKILLS.blade.level(lv);
+  const n = cfg.count;
+  for(let i=0;i<n;i++){
+    const ang = player.bladeAng + i*Math.PI*2/n;
+    const px = player.pos.x+Math.cos(ang)*cfg.radius;
+    const pz = player.pos.z+Math.sin(ang)*cfg.radius;
+    const bladeMesh = makeGlow(0x79c96b,0.22); bladeMesh.position.set(px,0.6,pz); scene.add(bladeMesh);
+    effects.push({ mesh:bladeMesh, life:0.5, update:(e,t)=>{
+      // 追踪刀片旋转
+      const a2 = player.bladeAng + i*Math.PI*2/n;
+      e.mesh.position.set(player.pos.x+Math.cos(a2)*cfg.radius, 0.6, player.pos.z+Math.sin(a2)*cfg.radius);
+      // 伤害接触怪物
+      for(const mon of monsters){
+        if(mon.dead) continue;
+        if(dist2D(e.mesh.position, mon.pos) < 0.7+mon.type.radius){ hitMonster(mon, cfg.damage*player.atkMul); }
+      }
+    } });
+  }
+  if(player.bladeAng===undefined) player.bladeAng=0;
+};
+function castHoly(){
+  const lv = getSkillLevel('holy'); if(lv<1) return;
+  const cfg = SKILLS.holy.level(lv);
+  const target = nearestMonster(player.pos);
+  if(!target) return;
+  const dir = new THREE.Vector3(target.pos.x-player.pos.x, 0, target.pos.z-player.pos.z).normalize();
+  const m = makeGlow(0xffffff,0.4); m.position.copy(player.pos); m.position.y=0.9; scene.add(m);
+  projectiles.push({ mesh:m, dir, speed:cfg.speed, damage:cfg.damage*player.atkMul, life:2.5, homing:true, skill:'holy' });
+};
+function castVine(){
+  const lv = getSkillLevel('vine'); if(lv<1) return;
+  const cfg = SKILLS.vine.level(lv);
+  const ring = makeRing(0x3fae5a, cfg.radius); ring.position.set(player.pos.x,0.2,player.pos.z); scene.add(ring);
+  effects.push({ mesh:ring, life:cfg.duration, update:(e,t)=>e.mesh.material.opacity = Math.max(0.2, 0.8-t/cfg.duration*0.5) });
+  const zone = { x:player.pos.x, z:player.pos.z, r:cfg.radius, t:cfg.duration, dmg:cfg.damage*player.atkMul };
+  effectZones.push(zone);
+};
+function getSkillLevel(sid){
+  const arr = player.abilities.actives.concat(player.abilities.passives);
+  const a = arr.find(x=>x.skillId===sid); return a ? a.level : 0;
+}
+
+// 每帧更新技能冷却与施法
+function updateAbilities(dt){
+  player.hitCooldown = Math.max(0, player.hitCooldown-dt);
+  // 再生被动
+  if(player.passives.regen>0){ player.hp = Math.min(player.maxHp, player.hp+player.passives.regen*dt); updateHp(); }
+  // 刀片旋转角
+  if(player.bladeAng===undefined) player.bladeAng=0;
+  player.bladeAng += dt*3.2;
+  // 主动技能自动释放
+  for(const a of player.abilities.actives){
+    const sid = a.skillId;
+    const cd = SKILLS[sid].cd * (1-player.passives.cdr);
+    player.abilities.timers[sid] = (player.abilities.timers[sid]||0) - dt;
+    if(player.abilities.timers[sid]<=0){
+      SKILLS[sid].cast(player);
+      if(player.mesh.userData && player.mesh.userData.sprite) player.anim.atkT = 0.3;
+      player.abilities.timers[sid] = cd;
+    }
+  }
+  renderSkillsBar();
+}
+// 弹道更新
+function updateProjectiles(dt){
+  for(let i=projectiles.length-1;i>=0;i--){
+    const p = projectiles[i];
+    if(p.homing){
+      const t = nearestMonster(p.mesh.position);
+      if(t){ const d = new THREE.Vector3(t.pos.x-p.mesh.position.x,0,t.pos.z-p.mesh.position.z).normalize(); p.dir.lerp(d,0.1).normalize(); }
+    }
+    p.mesh.position.x += p.dir.x*p.speed*dt; p.mesh.position.z += p.dir.z*p.speed*dt;
+    p.life -= dt;
+    // 障碍碰撞：阻挡类(树/石/栅栏/地标)挡弹道，可破坏物(桶/箱)被技能击碎
+    for(const ob of obstacleList){
+      if(ob.destroyed) continue;
+      if(dist2D(p.mesh.position, ob) < ob.r + 0.3){
+        if(ob.kind==='breakable'){ ob.hp -= p.damage; if(ob.hp<=0) breakObstacle(ob); }
+        p.life = 0; break;
+      }
+    }
+    // 命中检测
+    for(const mon of monsters){
+      if(mon.dead) continue;
+      if(dist2D(p.mesh.position, mon.pos) < 0.6+mon.type.radius){ hitMonster(mon, p.damage); p.life=0; break; }
+    }
+    if(p.life<=0){ scene.remove(p.mesh); projectiles.splice(i,1); }
+  }
+}
+const effectZones = []; // 藤蔓区域
+function updateEffects(dt){
+  for(let i=effects.length-1;i>=0;i--){
+    const e = effects[i]; e.life -= dt; if(e.update) e.update(e, 0.06);
+    if(e.life<=0){ scene.remove(e.mesh); effects.splice(i,1); }
+  }
+  for(let i=effectZones.length-1;i>=0;i--){
+    const z = effectZones[i]; z.t -= dt;
+    if(z.t>0){
+      for(const mon of monsters){
+        if(mon.dead) continue;
+        if(dist2D(mon.pos,{x:z.x,z:z.z}) < z.r+mon.type.radius){ hitMonster(mon, z.dmg*dt*2); }
+      }
+    } else { effectZones.splice(i,1); }
+  }
+}
+/* ===== 怪物 ===== */
+let monsters = []; // {mesh, pos, hp, type, dead, slow, slowTime}
+function dist2D(a,b){ return Math.hypot(a.x-b.x, a.z-b.z); }
+function nearestMonster(from, maxDist=999, filter){ 
+  let best=null, bd=maxDist;
+  for(const m of monsters){
+    if(m.dead) continue;
+    if(filter && !filter(m)) continue;
+    const d = dist2D(from, m.pos);
+    if(d<bd){ bd=d; best=m; }
+  }
+  return best;
+}
+// 创建怪物网格
+function buildMonsterMesh(type, scale){
+  const g = new THREE.Group();
+  const mat = new THREE.MeshLambertMaterial({ color:type.color });
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.5*scale,10,8), mat); body.position.y=0.5*scale; body.castShadow=true;
+  const eyeMat = new THREE.MeshBasicMaterial({ color:0x233046 });
+  const eye = new THREE.Mesh(new THREE.SphereGeometry(0.09*scale,6,6), eyeMat); eye.position.set(0.16*scale,0.55*scale,0.42*scale);
+  const eye2 = eye.clone(); eye2.position.x=-0.16*scale;
+  g.add(body,eye,eye2);
+  return g;
+}
+function spawnMonster(typeId, px, pz){
+  const type = MONSTER_TYPES[typeId];
+  const scale = type.boss ? (type.final?1.6:1.3) : (0.8+Math.random()*0.5);
+  const mesh = buildMonsterMesh(type, scale);
+  const pos = { x:px, z:pz };
+  mesh.position.set(px,0,pz);
+  // 避免出生在玩家身边过近
+  scene.add(mesh);
+  monsters.push({ mesh, pos, hp:type.hp*(type.boss?1: scale<1?1:1.15), type, dead:false, slow:0, slowTime:0, scale });
+}
+function removeMonsterMesh(m){
+  scene.remove(m.mesh);
+  const idx = monsters.indexOf(m); if(idx>=0) monsters.splice(idx,1);
+}
+function effectBurst(x,z,color){
+  const burst = makeGlow(color,0.6); burst.position.set(x,0.8,z); scene.add(burst);
+  effects.push({ mesh:burst, life:0.3, update:(e,t)=>e.mesh.scale.setScalar(1+t*3) });
+}
+
+// 刷怪逻辑
+let spawnTimer=0, bossSpawned=0, finalSpawned=false, bossDead=false;
+function updateSpawning(dt, elapsed){
+  const minute = elapsed/60;
+  // 普通怪按公式动态生成
+  spawnTimer -= dt;
+  const gap = Math.max(0.35, 1.2 - minute*0.06);
+  if(spawnTimer<=0){
+    spawnTimer = gap;
+    const cap = 80 + Math.floor(minute*12);
+    if(monsters.length < cap){
+      const ang = Math.random()*Math.PI*2;
+      const r = 26 + Math.random()*10;
+      const px = player.pos.x+Math.cos(ang)*r;
+      const pz = player.pos.z+Math.sin(ang)*r;
+      // 按分钟选类型
+      let tid='slime';
+      const roll = Math.random();
+      if(minute<3){ tid = roll<0.85?'slime':'ghost'; }
+      else if(minute<5){ tid = roll<0.6?'slime':(roll<0.9?'ghost':'runner'); }
+      else if(minute<10){ tid = roll<0.5?'slime':(roll<0.8?'ghost':(roll<0.95?'runner':'brute')); }
+      else { tid = roll<0.45?'slime':(roll<0.7?'ghost':(roll<0.9?'runner':'brute')); }
+      spawnMonster(tid, px, pz);
+    }
+  }
+  // BOSS：每5分钟1只
+  const bossDue = Math.floor(elapsed/300);
+  if(bossDue>bossSpawned && !finalSpawned && elapsed>=15){
+    bossSpawned = bossDue;
+    let bx, bz, note='';
+    if(landmarks.length){
+      const lm = landmarks[Math.floor(Math.random()*landmarks.length)];
+      bx=lm.x; bz=lm.z;
+      note='于'+(lm.type==='fountain'?'喷泉':'废墟石柱')+'旁现身';
+    } else { const ang=Math.random()*Math.PI*2; bx=player.pos.x+Math.cos(ang)*24; bz=player.pos.z+Math.sin(ang)*24; }
+    announce('⚔ BOSS 降临！'+note,'warn');
+    spawnMonster('boss', bx, bz);
+  }
+  // 终极：15分钟
+  if(!finalSpawned && elapsed>=900){
+    finalSpawned = true;
+    announce('☠ 终极魔帝降临！击杀通关！','danger');
+    const ang=Math.random()*Math.PI*2;
+    spawnMonster('final', player.pos.x+Math.cos(ang)*22, player.pos.z+Math.sin(ang)*22);
+  }
+}
+
+// 怪物移动：朝玩家，受障碍阻挡；碰到玩家造成伤害
+function updateMonsters(dt){
+  for(const m of monsters){
+    if(m.dead) continue;
+    if(m.slowTime>0){ m.slowTime-=dt; m.slow=0.5; } else m.slow=0;
+    const spd = m.type.speed*(1-m.slow*0.6)*(m.type.final?0.8:1);
+    const dx = player.pos.x-m.pos.x, dz = player.pos.z-m.pos.z;
+    const d = Math.hypot(dx,dz)||1;
+    m.pos.x += dx/d*spd*dt; m.pos.z += dz/d*spd*dt;
+    collideObstacles(m.pos, m.type.radius);
+    m.mesh.position.set(m.pos.x,0,m.pos.z);
+    // 接触伤害
+    if(d < 0.9 + m.type.radius*0.8){
+      const dmg = m.type.final ? 20 : 14;
+      damagePlayer(dmg);
+    }
+  }
+}
+/* ===== 掉落物：金币/血瓶/临时buff ===== */
+let drops = []; // {mesh, x, z, kind, val, life}
+function spawnCoinMesh(x,z,color,size){
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(size,size,0.15,10), new THREE.MeshBasicMaterial({color}));
+  m.position.set(x,0.2,z); m.rotation.x=Math.PI/2; m.rotation.z=Math.PI/2; scene.add(m);
+  return m;
+}
+function dropCoin(x,z,val){
+  const m = spawnCoinMesh(x,z,0xffd24d,0.28);
+  drops.push({ mesh:m, x, z, kind:'coin', val, life:25 });
+}
+function dropPotion(x,z){
+  const m = new THREE.Mesh(new THREE.SphereGeometry(0.25,8,6), new THREE.MeshBasicMaterial({color:0xff5a6b}));
+  m.position.set(x,0.3,z); scene.add(m);
+  drops.push({ mesh:m, x, z, kind:'potion', val:35, life:20 });
+}
+function dropBuff(x,z){
+  const m = new THREE.Mesh(new THREE.OctahedronGeometry(0.28,0), new THREE.MeshBasicMaterial({color:0x7fd0ff}));
+  m.position.set(x,0.4,z); scene.add(m);
+  drops.push({ mesh:m, x, z, kind:'buff', val:8, life:14 }); // buff 8秒伤害翻倍
+}
+// 击杀后按概率生成掉落
+function spawnDrops(x,z){
+  if(Math.random()<DROP_RATE.potion) dropPotion(x,z);
+  if(Math.random()<DROP_RATE.buff) dropBuff(x,z);
+}
+function updateDrops(dt){
+  for(let i=drops.length-1;i>=0;i--){
+    const d = drops[i];
+    d.life -= dt;
+    // 漂浮动画
+    d.mesh.rotation.y += dt*3;
+    // 拾取：距离够近
+    if(dist2D({x:d.x,z:d.z}, player.pos) < 1.2){
+      if(d.kind==='coin'){ player.coins += d.val; addCoinUI(d.val); }
+      else if(d.kind==='potion'){ const heal = d.val*(player.role==='priest'?1.5:1); player.hp=Math.min(player.maxHp, player.hp+heal); updateHp(); floatText('+'+Math.round(heal)+' HP','#ff5a6b'); }
+      else if(d.kind==='buff'){ player.buffTimer = d.val; floatText('伤害翻倍!','#7fd0ff'); }
+      scene.remove(d.mesh); drops.splice(i,1); continue;
+    }
+    if(d.life<=0){ scene.remove(d.mesh); drops.splice(i,1); }
+  }
+  // buff 计时
+  if(player.buffTimer>0) player.buffTimer-=dt;
+}
+/* ===== HUD ===== */
+let runTime = 0; // 对局已过秒
+let selectedRole = 'warrior';
+let buffTimer = 0;
+
+// 经验条
+function updateExpUI(){
+  $('expLv').textContent = 'Lv.'+player.level;
+  $('expFill').style.width = Math.min(100, player.exp/player.expNeed*100)+'%';
+}
+// 血量
+function updateHp(){
+  $('hpTxt').textContent = Math.max(0,Math.floor(player.hp))+' / '+player.maxHp;
+  $('hpFill').style.width = Math.max(0, player.hp/player.maxHp*100)+'%';
+}
+// 时间
+function updateTime(){
+  const remain = Math.max(0, 900-runTime);
+  const mm = Math.floor(remain/60), ss = Math.floor(remain%60);
+  $('timeBox').textContent = String(mm).padStart(2,'0')+':'+String(ss).padStart(2,'0');
+}
+// 金币 UI
+function addCoinUI(val){
+  $('coinBox').innerHTML = player.coins+'<small>本局 · 累计 '+save.totalCoins+'</small>';
+  floatText('+'+val,'#ffd24d');
+}
+// 飘字
+function floatText(txt, color){
+  const el = document.createElement('div');
+  el.className='floatText'; el.textContent=txt; el.style.color=color||'#fff';
+  el.style.left=(Math.random()*40+30)+'%'; el.style.top=(Math.random()*20+30)+'%';
+  document.getElementById('hud').appendChild(el);
+  setTimeout(()=>el.remove(), 1000);
+}
+// 公告
+function announce(txt, cls){
+  const a = $('announce'); a.textContent=txt; a.className='show '+(cls||'');
+  setTimeout(()=>a.className='', 2200);
+}
+// 底部技能栏
+function renderSkillsBar(){
+  const bar = $('skillsBar');
+  const all = player ? player.abilities.actives.concat(player.abilities.passives) : [];
+  bar.innerHTML = all.map(a=>{
+    const s = SKILLS[a.skillId];
+    const cd = s.type==='active' ? player.abilities.timers[a.skillId] : 0;
+    const total = s.type==='active' ? s.cd*(1-player.passives.cdr) : 1;
+    const pct = s.type==='active' && total>0 ? Math.min(100, cd/total*100) : 0;
+    return '<div class="skillIcon"><div class="si-ico">'+s.icon+'</div><div class="si-name">'+s.name+'</div>'+
+      (a.level>1?'<div class="si-lv">'+a.level+'</div>':'')+
+      (s.type==='active'?'<div class="si-cd" style="height:'+pct+'%"></div>':'')+'</div>';
+  }).join('');
+}
+/* ===== 升级弹窗（三选一） ===== */
+function openUpgradeModal(){
+  // 暂停主循环施法，弹三选一
+  gamePaused = true;
+  $('upgModal').classList.add('show');
+  const cards = $('upgCards');
+  cards.innerHTML = '';
+  // 抽取 3 个可选技能：未满级
+  const allIds = Object.keys(SKILLS);
+  const available = allIds.filter(sid=>{
+    const lv = getSkillLevel(sid);
+    return lv<5;
+  });
+  const picked = [];
+  while(picked.length<3 && available.length>0){
+    const i = Math.floor(Math.random()*available.length);
+    const sid = available.splice(i,1)[0];
+    picked.push(sid);
+  }
+  // 避免三选完全相同
+  picked.forEach(sid=>{
+    const s = SKILLS[sid];
+    const cur = getSkillLevel(sid);
+    const div = document.createElement('div');
+    div.className='upgCard';
+    div.innerHTML = '<div class="u-ico">'+s.icon+'</div><div class="u-name">'+s.name+
+      (cur>0?' <small>(Lv.'+cur+'→'+(cur+1)+')</small>':'')+'</div>'+
+      '<div class="u-desc">'+s.desc+'</div><div class="u-tag">'+(s.type==='active'?'主动':'被动')+'</div>';
+    div.addEventListener('click', ()=>{ gainSkill(sid); $('upgModal').classList.remove('show'); gamePaused=false; updateExpUI(); renderSkillsBar(); });
+    cards.appendChild(div);
+  });
+}
+
+/* ===== 主循环 ===== */
+let gamePaused = true; // 菜单/升级时暂停
+let elapsed = 0;       // 对局累计秒
+let clock = new THREE.Clock();
+let gameActive = false;
+
+function startGame(roleId){
+  // 清场
+  while(monsters.length) removeMonsterMesh(monsters[0]);
+  drops.forEach(d=>scene.remove(d.mesh)); drops.length=0;
+  projectiles.forEach(p=>scene.remove(p.mesh)); projectiles.length=0;
+  effects.forEach(e=>scene.remove(e.mesh)); effects.length=0;
+  effectZones.length=0;
+  if(player && player.mesh) scene.remove(player.mesh);
+  selectedRole = roleId;
+  initPlayer(roleId);
+  updateExpUI(); updateHp(); updateTime();
+  $('menuModal').classList.remove('show');
+  $('endModal').classList.remove('show');
+  runTime=0; elapsed=0; spawnTimer=0; bossSpawned=0; finalSpawned=false;
+  gamePaused=false; gameActive=true;
+  updateChunks(0,0);
+}
+
+function endGame(won){
+  gameActive=false; gamePaused=true;
+  const wins = won ? '胜利' : '失败';
+  $('endTitle').textContent = won ? '通关成功！' : '挑战失败…';
+  $('endPanel').className = 'panel result '+(won?'resultWin':'resultLose');
+  $('endSub').textContent = won ? '你击杀了终极魔帝，本局通关！' : '你的角色倒下了，本局结束。';
+  $('endStats').innerHTML = '存活时间：<b>'+Math.floor(runTime/60)+'分'+Math.floor(runTime%60)+'秒</b><br/>'+
+    '击杀怪物：<b>'+player.kills+'</b> 只<br/>本局金币：<b>+'+player.coins+'</b><br/>角色等级：<b>Lv.'+player.level+'</b>';
+  // 结算：累加金币+记录
+  const gained = won ? player.coins : player.coins;
+  settleRun(selectedRole, runTime, player.kills, won, gained);
+  // 更新菜单金币显示
+  $('menuCoins').textContent = '累计金币：'+save.totalCoins;
+  $('endModal').classList.add('show');
+}
+
+// 动画主循环
+function animate(){
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  if(gamePaused || !gameActive || !player){ renderer.render(scene,camera); return; }
+  // 推进对局时间
+  elapsed += dt; runTime += dt;
+  // 更新
+  updateChunks(player.pos.x, player.pos.z);
+  if(player.dying){
+    player.anim.deadT -= dt;
+    if(player.mesh.userData && player.mesh.userData.sprite) updateSpritePlayer(dt);
+    if(player.anim.deadT<=0) endGame(false);
+    renderer.render(scene,camera);
+    return;
+  }
+  movePlayer(dt);
+  if(player.mesh.userData && player.mesh.userData.sprite) updateSpritePlayer(dt);
+  updateAbilities(dt);
+  updateSpawning(dt, elapsed);
+  updateMonsters(dt);
+  updateProjectiles(dt);
+  updateEffects(dt);
+  updateDrops(dt);
+  // 相机跟随
+  updateCamera(player.pos);
+  // HUD
+  updateExpUI(); updateTime();
+  // 通关判定：终极怪被击杀
+  if(finalSpawned && !monsters.some(m=>m.type.final && !m.dead)){ endGame(true); }
+  renderer.render(scene,camera);
+}
+
+// 首次渲染一帧（满足首帧契约）
+function firstFrame(){ renderer.render(scene,camera); }
+firstFrame();
+/* ===== 菜单 / 角色选择 ===== */
+function renderMenu(){
+  $('menuCoins').textContent = '累计金币：'+save.totalCoins;
+  const grid = $('roleGrid');
+  grid.innerHTML = '';
+  ROLES.forEach(r=>{
+    const unlocked = isUnlocked(r.id);
+    const card = document.createElement('div');
+    card.className = 'roleCard' + (unlocked?'':' locked');
+    card.innerHTML = '<div class="r-top"><span class="r-ico">'+r.icon+'</span>'+
+      (unlocked ? '<span class="r-state un">已解锁</span>' : '<span class="r-state lo">'+(r.price>0?r.price+' 金币解锁':'免费')+'</span>')+'</div>'+
+      '<div class="r-name">'+r.name+'</div>'+
+      '<div class="r-passive">被动：'+r.passive+'</div>';
+    card.addEventListener('click', ()=>{
+      if(unlocked){ selectedRole = r.id; $('startBtn').textContent = '开始冒险（'+r.name+'）'; }
+      else {
+        if(unlockRole(r.id)){ renderMenu(); floatText('解锁 '+r.name+'！','#4fae5a'); }
+        else floatText('金币不足！','#ff6b6b');
+      }
+    });
+    grid.appendChild(card);
+  });
+}
+$('startBtn').addEventListener('click', ()=>{ startGame(selectedRole); });
+$('againBtn').addEventListener('click', ()=>{ startGame(selectedRole); });
+$('menuBtn').addEventListener('click', ()=>{ $('endModal').classList.remove('show'); $('menuModal').classList.add('show'); renderMenu(); });
+
+// 初始展示主菜单
+renderMenu();
+$('menuModal').classList.add('show');
+// 启动动画循环（首帧已渲染，循环不依赖场景就绪）
+animate();
+</script>
+</body>
+</html>

@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mock 数据生成器</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>~</text></svg>">
+<style>
+  :root {
+    --bg:#0f1420; --panel:#151c2c; --panel2:#1a2338; --border:#283350;
+    --text:#e6ecf8; --muted:#8b98b5; --accent:#4f8cff; --accent2:#7c5cff;
+    --ok:#3fd68f; --danger:#ff6b6b;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { height:100%; }
+  body {
+    background:var(--bg); color:var(--text);
+    font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    display:flex; flex-direction:column; height:100dvh; overflow:hidden;
+  }
+  header { padding:14px 20px 10px; border-bottom:1px solid var(--border); }
+  header h1 { font-size:18px; display:flex; align-items:center; gap:8px; }
+  header h1 .logo {
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    width:28px; height:28px; border-radius:8px; display:grid; place-items:center;
+    font-family:ui-monospace,Consolas,monospace; font-size:13px; font-weight:700;
+  }
+  header p { color:var(--muted); font-size:13px; margin-top:4px; }
+
+  .grid { flex:1; min-height:0; display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:12px 20px; }
+  .panel {
+    background:var(--panel); border:1px solid var(--border); border-radius:12px;
+    display:flex; flex-direction:column; min-height:0; overflow:hidden;
+  }
+  .panel-title {
+    padding:8px 14px; font-size:12px; color:var(--muted); letter-spacing:.5px;
+    border-bottom:1px solid var(--border);
+  }
+  .panel-body { flex:1; min-height:0; overflow:auto; padding:12px 14px; }
+
+  .config-line { display:flex; align-items:center; gap:8px; margin-bottom:12px; font-size:13px; color:var(--muted); flex-wrap:wrap; }
+  .config-line b { color:var(--text); font-weight:500; }
+  input[type=number], select {
+    background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:8px;
+    padding:6px 10px; font-size:13px; outline:none; cursor:pointer;
+  }
+  input[type=number]:focus, select:focus { border-color:var(--accent); }
+  input[type=number] { width:80px; }
+
+  .field-item {
+    background:var(--panel2); border:1px solid var(--border); border-radius:10px;
+    padding:10px 12px; margin-bottom:8px;
+  }
+  .row { display:flex; gap:8px; align-items:center; }
+  .row input[type=text], .row input {
+    flex:1; min-width:0; background:var(--bg); color:var(--text); border:1px solid var(--border);
+    border-radius:8px; padding:6px 10px; font-size:13px; outline:none;
+  }
+  .row input:focus { border-color:var(--accent); }
+  .arg-row { margin-top:6px; font-size:12px; color:var(--muted); display:flex; align-items:center; gap:8px; }
+  .arg-row input {
+    flex:1; min-width:0; background:var(--bg); color:var(--text); border:1px solid var(--border);
+    border-radius:8px; padding:5px 9px; font-size:12px; outline:none;
+  }
+  .arg-row input:focus { border-color:var(--accent); }
+
+  .btnrow { display:flex; gap:8px; flex-wrap:wrap; }
+  .btn {
+    background:var(--panel2); color:var(--text); border:1px solid var(--border);
+    padding:6px 14px; border-radius:8px; font-size:13px; cursor:pointer; transition:.15s;
+  }
+  .btn:hover { border-color:var(--accent); color:#fff; }
+  .btn.primary { background:linear-gradient(135deg,var(--accent),var(--accent2)); border:none; }
+  .btn:disabled { opacity:.45; cursor:not-allowed; }
+  .btn.danger:hover { border-color:var(--danger); }
+
+  #output {
+    flex:1; width:100%; min-height:0; background:transparent; color:var(--text); border:none; outline:none;
+    resize:none; padding:12px 14px; font-family:ui-monospace,"SF Mono",Consolas,monospace;
+    font-size:13px; line-height:1.6; tab-size:2; white-space:pre;
+  }
+
+  .status { padding:4px 14px 12px; font-size:12px; min-height:20px; }
+  .status.ok { color:var(--ok); } .status.err { color:var(--danger); } .status.info { color:var(--muted); }
+
+  footer { padding:6px 20px 10px; color:var(--muted); font-size:12px; text-align:center; }
+
+  ::-webkit-scrollbar { width:10px; height:10px; }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:5px; }
+  ::-webkit-scrollbar-thumb:hover { background:#3a4a70; }
+
+  @media (max-width:900px) {
+    body { overflow:auto; height:auto; }
+    .grid { grid-template-columns:1fr; }
+    .panel { min-height:320px; max-height:60vh; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span class="logo">~</span>Mock 数据生成器</h1>
+  <p>本地生成结构化模拟数据 · 支持 JSON / CSV / SQL INSERT 输出 · 无需联网，数据不离开本机</p>
+</header>
+
+<div class="grid">
+  <div class="panel">
+    <div class="panel-title">字段配置</div>
+    <div class="panel-body">
+      <div class="config-line">
+        生成条数 <b><input type="number" id="count" value="10" min="1" max="1000" /></b>
+        输出格式
+        <select id="outType">
+          <option value="json">JSON</option>
+          <option value="csv">CSV</option>
+          <option value="sql">SQL INSERT</option>
+        </select>
+      </div>
+      <div id="fieldList"></div>
+      <div class="btnrow" style="margin-top:14px">
+        <button class="btn" id="addBtn">+ 添加字段</button>
+        <button class="btn primary" id="genBtn">生成 Mock 数据</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">输出结果</div>
+    <textarea id="output" placeholder="生成的数据将显示在这里…" spellcheck="false" readonly></textarea>
+    <div class="btnrow" style="padding:10px 14px">
+      <button class="btn" id="copyBtn" disabled>复制</button>
+      <button class="btn" id="clearBtn">清空</button>
+      <span class="status info" id="status" style="margin-left:auto;padding:0;">等待生成…</span>
+    </div>
+  </div>
+</div>
+
+<footer>纯前端单文件工具 · 内置 Mock 生成器 · 无任何网络请求，可离线使用</footer>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const fieldList = $('fieldList'), output = $('output');
+  const countEl = $('count'), outTypeEl = $('outType');
+  const addBtn = $('addBtn'), genBtn = $('genBtn'), copyBtn = $('copyBtn'), clearBtn = $('clearBtn');
+  const statusEl = $('status');
+
+  /* ================= 本地 Mock 生成器（替代 faker，零依赖） ================= */
+  const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  const pad = (n, w) => String(n).padStart(w || 2, '0');
+
+  const M = {
+    uuid() {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0;
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+      });
+    },
+    name() {
+      const family = pick('王 李 张 刘 陈 杨 黄 赵 吴 周 徐 孙 马 朱 胡 郭 何 高 林 罗 郑 梁'.split(/\s+/));
+      const given = pick('伟 芳 娜 敏 静 磊 军 洋 勇 艳 杰 涛 明 超 秀英 桂英 建华 玉兰 志强 丽丽'.split(/\s+/));
+      return family + given;
+    },
+    email() {
+      return M.username() + '@' + pick(['gmail.com','qq.com','163.com','outlook.com','example.com']) + '';
+    },
+    phone() {
+      return '1' + pick(['3','5','7','8','9']) + pick(['0','1','2','3','4','5','6','7','8','9']) + Math.random().toString().slice(2, 11);
+    },
+    username() {
+      return pick('alice bob carol dave eric frank grace henry ivy jack kate lucy mark nina'.split(/\s+/)) + rnd(0, 999);
+    },
+    int(min, max) { return rnd(min || 0, max || 1000); },
+    float(min, max) {
+      return +( (Math.random() * ((max || 99) - (min || 0)) + (min || 0)).toFixed(2) );
+    },
+    boolean() { return Math.random() < 0.5; },
+    timestamp() { return Date.now() - Math.floor(Math.random() * 100000000000); },
+    date() {
+      const d = new Date(Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24 * 365));
+      return d.toISOString().slice(0, 10);
+    },
+    url() { return 'https://' + M.username().toLowerCase() + '.' + pick(['com','cn','io','org']) + '/' + pick(['index','page','item']) + '.html'; },
+    ipv4() { return rnd(1,255) + '.' + rnd(0,255) + '.' + rnd(0,255) + '.' + rnd(1,254); },
+    ipv6() {
+      const seg = () => (Math.random() * 0xFFFF | 0).toString(16).padStart(4, '0');
+      return Array.from({length:8}, seg).join(':');
+    },
+    mac() { return Array.from({length:6}, () => pad((Math.random()*256|0).toString(16),2)).join(':'); },
+    color() { return '#' + Array.from({length:3}, () => pad((Math.random()*256|0).toString(16),2)).join(''); },
+    text() {
+      const sents = [
+        '在用户研究中，我们关注真实的使用场景与反馈。',
+        '产品迭代需要以数据为驱动，持续验证假设。',
+        '良好的交互设计应当降低认知负担，提升效率。',
+        '每一次发布都是一次新的开始，也是一次学习。'
+      ];
+      const n = rnd(1, 3);
+      return Array.from({length:n}, () => pick(sents)).join('');
+    },
+    country() { return pick(['中国','美国','日本','德国','法国','英国','加拿大','澳大利亚','韩国','巴西']); },
+    enum(arg) {
+      const arr = String(arg || '').split(',').map(x => x.trim()).filter(Boolean);
+      return arr.length ? pick(arr) : '';
+    },
+    fixed(arg) { return String(arg || ''); }
+  };
+
+  /* ================= 字段类型 ================= */
+  const fieldTypes = [
+    { key:'increment', label:'自增ID' },
+    { key:'uuid',      label:'UUID v4' },
+    { key:'name',      label:'姓名' },
+    { key:'email',     label:'邮箱' },
+    { key:'phone',     label:'手机号' },
+    { key:'username',  label:'用户名' },
+    { key:'int',       label:'整数' },
+    { key:'float',     label:'浮点数' },
+    { key:'boolean',   label:'布尔值' },
+    { key:'timestamp', label:'时间戳' },
+    { key:'date',      label:'日期' },
+    { key:'url',       label:'URL' },
+    { key:'ipv4',      label:'IPv4' },
+    { key:'ipv6',      label:'IPv6' },
+    { key:'mac',       label:'MAC 地址' },
+    { key:'color',     label:'十六进制颜色' },
+    { key:'text',      label:'段落文本' },
+    { key:'country',   label:'国家' },
+    { key:'enum',      label:'枚举(逗号分隔)' },
+    { key:'fixed',     label:'固定常量' }
+  ];
+
+  let fields = [];
+  function renderFields() {
+    fieldList.innerHTML = '';
+    fields.forEach((f, idx) => {
+      const div = document.createElement('div');
+      div.className = 'field-item';
+      const nameInput = document.createElement('input');
+      nameInput.type = 'text'; nameInput.placeholder = '字段名'; nameInput.value = f.name || '';
+      nameInput.addEventListener('input', () => { fields[idx].name = nameInput.value; });
+      const typeSel = document.createElement('select');
+      typeSel.innerHTML = fieldTypes.map(t =>
+        `<option value="${t.key}" ${f.type === t.key ? 'selected' : ''}>${t.label}</option>`).join('');
+      typeSel.addEventListener('change', () => { fields[idx].type = typeSel.value; });
+      const delBtn = document.createElement('button');
+      delBtn.className = 'btn danger'; delBtn.textContent = '删除';
+      delBtn.addEventListener('click', () => { fields.splice(idx, 1); renderFields(); });
+      const nameRow = document.createElement('div'); nameRow.className = 'row';
+      nameRow.append(nameInput, typeSel, delBtn);
+      const argRow = document.createElement('div'); argRow.className = 'arg-row';
+      const argLabel = document.createElement('span'); argLabel.textContent = '参数';
+      const argInput = document.createElement('input');
+      argInput.type = 'text'; argInput.placeholder = '枚举值 / 固定值 / 范围 min,max'; argInput.value = f.arg || '';
+      argInput.addEventListener('input', () => { fields[idx].arg = argInput.value; });
+      argRow.append(argLabel, argInput);
+      div.append(nameRow, argRow);
+      fieldList.appendChild(div);
+    });
+  }
+
+  function addField() { fields.push({ name:'', type:'name', arg:'' }); renderFields(); }
+  function removeField(i) { fields.splice(i, 1); renderFields(); }
+
+  function getValue(type, arg, rowIdx) {
+    const [min, max] = String(arg).split(',').map(Number);
+    switch (type) {
+      case 'increment': return rowIdx + 1;
+      case 'uuid':      return M.uuid();
+      case 'name':      return M.name();
+      case 'email':     return M.email();
+      case 'phone':     return M.phone();
+      case 'username':  return M.username();
+      case 'int':       return M.int(min || 0, max || 1000);
+      case 'float':     return M.float(min || 0, max || 99);
+      case 'boolean':   return M.boolean();
+      case 'timestamp': return M.timestamp();
+      case 'date':      return M.date();
+      case 'url':       return M.url();
+      case 'ipv4':      return M.ipv4();
+      case 'ipv6':      return M.ipv6();
+      case 'mac':       return M.mac();
+      case 'color':     return M.color();
+      case 'text':      return M.text();
+      case 'country':   return M.country();
+      case 'enum':      return M.enum(arg);
+      case 'fixed':     return M.fixed(arg);
+      default:          return '';
+    }
+  }
+
+  function setStatus(msg, cls) { statusEl.textContent = msg; statusEl.className = 'status ' + cls; }
+
+  function genData() {
+    const count = Math.min(Math.max(Number(countEl.value) || 0, 0), 1000);
+    const outType = outTypeEl.value;
+    if (!fields.some(f => f.name)) { setStatus('✕ 请至少添加一个带名称的字段', 'err'); return; }
+    if (count < 1) { setStatus('✕ 生成条数需 ≥ 1', 'err'); return; }
+    const rows = [];
+    for (let i = 0; i < count; i++) {
+      const obj = {};
+      fields.forEach(fd => { if (fd.name) obj[fd.name] = getValue(fd.type, fd.arg, i); });
+      rows.push(obj);
+    }
+    let result = '';
+    if (outType === 'json') {
+      result = JSON.stringify(rows, null, 2);
+    } else if (outType === 'csv') {
+      const keys = Object.keys(rows[0] || {});
+      result = keys.join(',') + '\n';
+      rows.forEach(r => {
+        result += keys.map(k => {
+          const v = r[k];
+          return (typeof v === 'string' && v.includes(',')) ? `"${v}"` : v;
+        }).join(',') + '\n';
+      });
+    } else if (outType === 'sql') {
+      const table = 'mock_table';
+      const keys = Object.keys(rows[0] || {});
+      result = rows.map(r => {
+        const vals = keys.map(k => {
+          const v = r[k];
+          return typeof v === 'number' ? v : `'${String(v).replace(/'/g, "''")}'`;
+        });
+        return `INSERT INTO ${table}(${keys.join(',')}) VALUES(${vals.join(',')});`;
+      }).join('\n');
+    }
+    output.value = result;
+    copyBtn.disabled = !result;
+    setStatus(`✓ 已生成 ${rows.length} 条 ${outType.toUpperCase()} 数据`, 'ok');
+  }
+
+  async function copyResult() {
+    if (!output.value) return;
+    try { await navigator.clipboard.writeText(output.value); }
+    catch {
+      output.select();
+      document.execCommand('copy');
+    }
+    const old = copyBtn.textContent;
+    copyBtn.textContent = '✓ 已复制';
+    setTimeout(() => copyBtn.textContent = old, 1200);
+  }
+
+  addBtn.addEventListener('click', addField);
+  genBtn.addEventListener('click', genData);
+  copyBtn.addEventListener('click', copyResult);
+  clearBtn.addEventListener('click', () => { output.value = ''; copyBtn.disabled = true; setStatus('已清空', 'info'); });
+
+  // 默认预置示例字段
+  fields.push({ name:'id', type:'increment', arg:'' });
+  fields.push({ name:'username', type:'username', arg:'' });
+  fields.push({ name:'email', type:'email', arg:'' });
+  fields.push({ name:'status', type:'enum', arg:'active,pending,blocked' });
+  renderFields();
+})();
+</script>
+</body>
+</html>

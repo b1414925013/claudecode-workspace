@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>JSON Path 查找器</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>{}</text></svg>">
+<style>
+  :root {
+    --bg:#0f1420; --panel:#151c2c; --panel2:#1a2338; --border:#283350;
+    --text:#e6ecf8; --muted:#8b98b5; --accent:#4f8cff; --accent2:#7c5cff;
+    --string:#7ee787; --number:#79c0ff; --boolean:#ffa657; --nullc:#8b98b5;
+    --key:#d2a8ff; --idx:#f0a6c0; --danger:#ff6b6b; --ok:#3fd68f;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html, body { height:100%; }
+  body {
+    background:var(--bg); color:var(--text);
+    font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    display:flex; flex-direction:column; height:100dvh; overflow:hidden;
+  }
+  header { padding:14px 20px 10px; border-bottom:1px solid var(--border); }
+  header h1 { font-size:18px; display:flex; align-items:center; gap:8px; }
+  header h1 .logo {
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    width:28px; height:28px; border-radius:8px; display:grid; place-items:center;
+    font-family:ui-monospace,Consolas,monospace; font-size:13px; font-weight:700;
+  }
+  header p { color:var(--muted); font-size:13px; margin-top:4px; }
+
+  .toolbar { display:flex; align-items:center; gap:8px; padding:10px 20px; flex-wrap:wrap; }
+  .btn {
+    background:var(--panel2); color:var(--text); border:1px solid var(--border);
+    padding:6px 14px; border-radius:8px; font-size:13px; cursor:pointer; transition:.15s;
+  }
+  .btn:hover { border-color:var(--accent); color:#fff; }
+  .btn.primary { background:linear-gradient(135deg,var(--accent),var(--accent2)); border:none; }
+  .btn:disabled { opacity:.45; cursor:not-allowed; }
+  .btn[hidden] { display:none; }
+  .status { font-size:13px; margin-left:auto; }
+  .status.ok { color:var(--ok); } .status.err { color:var(--danger); } .status.info { color:var(--muted); }
+
+  .grid { flex:1; min-height:0; display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:0 20px 12px; }
+  .panel {
+    background:var(--panel); border:1px solid var(--border); border-radius:12px;
+    display:flex; flex-direction:column; min-height:0; overflow:hidden;
+  }
+  .panel-title {
+    padding:8px 14px; font-size:12px; color:var(--muted); letter-spacing:.5px;
+    border-bottom:1px solid var(--border); display:flex; gap:12px; align-items:center;
+  }
+  .panel-title .stats { margin-left:auto; display:flex; gap:12px; }
+  #editor {
+    flex:1; width:100%; background:transparent; color:var(--text); border:none; outline:none;
+    padding:14px; resize:none; font-family:ui-monospace,"SF Mono",Consolas,monospace;
+    font-size:13px; line-height:1.6; tab-size:2;
+  }
+
+  .searchbar { display:flex; gap:8px; padding:10px 14px 6px; align-items:center; }
+  .searchbar .path-ico {
+    font-family:ui-monospace,Consolas,monospace; color:var(--accent);
+    font-weight:700; font-size:13px; flex-shrink:0;
+  }
+  #searchInput {
+    flex:1; min-width:0; background:var(--bg); border:1px solid var(--border); border-radius:8px;
+    color:var(--text); padding:7px 12px; outline:none;
+    font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:13px;
+  }
+  #searchInput:focus { border-color:var(--accent); }
+  .search-hint {
+    padding:2px 14px 8px; font-size:11px; color:var(--muted);
+    border-bottom:1px solid var(--border); font-family:ui-monospace,Consolas,monospace;
+  }
+  .search-status { padding:5px 14px; font-size:12px; border-bottom:1px solid var(--border); display:none; }
+  .search-status.show { display:block; }
+  .search-status.ok { color:var(--ok); } .search-status.err { color:var(--danger); }
+
+  #tree { flex:1; overflow:auto; padding:8px 0; font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:13px; }
+  .empty-hint { color:var(--muted); text-align:center; padding:48px 20px; line-height:2; font-family:inherit; }
+  .empty-hint code { background:var(--panel2); padding:2px 8px; border-radius:6px; }
+
+  .row {
+    display:flex; align-items:center; gap:6px; padding:2px 12px 2px 8px;
+    cursor:pointer; white-space:nowrap; border-left:2px solid transparent;
+  }
+  .row:hover { background:rgba(79,140,255,.08); }
+  .row.selected { background:rgba(79,140,255,.16); border-left-color:var(--accent); }
+  .row.match { background:rgba(63,214,143,.13); box-shadow:inset 2px 0 0 var(--ok); }
+  .row.match-first { animation:matchFlash 1s ease; }
+  @keyframes matchFlash { from { background:rgba(63,214,143,.5); } to { background:rgba(63,214,143,.13); } }
+  .arrow {
+    width:14px; height:14px; display:inline-flex; align-items:center; justify-content:center;
+    color:var(--muted); font-size:10px; transition:transform .15s; flex-shrink:0;
+  }
+  .row.open > .arrow { transform:rotate(90deg); }
+  .arrow.none { visibility:hidden; }
+  .key { color:var(--key); }
+  .key.idx { color:var(--idx); }
+  .key.root { color:var(--accent); font-weight:700; }
+  .val { overflow:hidden; text-overflow:ellipsis; max-width:60%; display:inline-block; vertical-align:bottom; }
+  .val.string { color:var(--string); } .val.number { color:var(--number); }
+  .val.boolean { color:var(--boolean); } .val.null { color:var(--nullc); font-style:italic; }
+  .summary { color:var(--muted); font-size:12px; }
+
+  .pathbar {
+    display:flex; align-items:center; gap:10px; padding:10px 20px;
+    border-top:1px solid var(--border); background:var(--panel);
+  }
+  .seg { display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden; flex-shrink:0; }
+  .seg button {
+    background:transparent; color:var(--muted); border:none; padding:6px 12px;
+    font-size:12px; cursor:pointer; font-family:ui-monospace,Consolas,monospace;
+  }
+  .seg button.active { background:var(--accent); color:#fff; }
+  #path {
+    flex:1; min-width:0; font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:14px;
+    color:#fff; background:var(--bg); border:1px solid var(--border); border-radius:8px;
+    padding:8px 12px; white-space:nowrap; overflow-x:auto;
+  }
+  #path:empty::before { content:"点击右侧树节点获取路径…"; color:var(--muted); font-size:13px; font-family:"PingFang SC","Microsoft YaHei",sans-serif; }
+
+  footer { padding:6px 20px 10px; color:var(--muted); font-size:12px; text-align:center; }
+
+  ::-webkit-scrollbar { width:10px; height:10px; }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:5px; }
+  ::-webkit-scrollbar-thumb:hover { background:#3a4a70; }
+
+  @media (max-width: 900px) {
+    body { overflow:auto; height:auto; }
+    .grid { grid-template-columns:1fr; }
+    .panel { min-height:320px; max-height:60vh; }
+    .pathbar { flex-wrap:wrap; position:sticky; bottom:0; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span class="logo">{ }</span>JSON Path 查找器</h1>
+  <p>双向工具：点击树节点获取它的 JSONPath；也可以输入 JSONPath 反向查找并高亮树中节点。所有解析均在本地完成。</p>
+</header>
+
+<div class="toolbar">
+  <button class="btn" id="exampleBtn">载入示例</button>
+  <button class="btn" id="formatBtn">格式化</button>
+  <button class="btn" id="clearBtn">清空</button>
+  <span class="status info" id="status">等待输入…（自动解析，Ctrl+Enter 快速格式化）</span>
+</div>
+
+<div class="grid">
+  <div class="panel">
+    <div class="panel-title">JSON 输入</div>
+    <textarea id="editor" placeholder='在此粘贴 JSON，例如：{"store":{"book":[{"title":"Moby Dick"}]}}' spellcheck="false"></textarea>
+  </div>
+  <div class="panel">
+    <div class="panel-title">
+      结构树
+      <span class="stats">
+        <span id="statNodes">节点 0</span>
+        <span id="statDepth">深度 0</span>
+        <span id="statSize">0 B</span>
+      </span>
+    </div>
+    <div class="searchbar">
+      <span class="path-ico">$</span>
+      <input id="searchInput" placeholder="输入 JSONPath 查找节点，如 $..price 或 $.store.book[*].author，回车执行" spellcheck="false" />
+      <button class="btn" id="nextBtn" hidden>下一个</button>
+      <button class="btn primary" id="searchBtn">查找</button>
+    </div>
+    <div class="search-hint">支持 .key　['key']　[0] [-1]　[0,2]　[*] .*　..key 递归　[start:end:step]　[?(@.price&lt;10)] 过滤</div>
+    <div class="search-status" id="searchStatus"></div>
+    <div id="tree"><div class="empty-hint">在左侧粘贴或输入 JSON<br>结构树将显示在这里，<code>点击任意节点</code>即可复制它的路径</div></div>
+  </div>
+</div>
+
+<div class="pathbar">
+  <div class="seg">
+    <button id="dotBtn" class="active">点号 $ . a . b</button>
+    <button id="bracketBtn">括号 $ ['a'] ['b']</button>
+  </div>
+  <div id="path"></div>
+  <button class="btn primary" id="copyBtn" disabled>复制路径</button>
+</div>
+
+<footer>纯前端工具 · 原创实现 · 点节点取路径 ⇄ 输路径找节点</footer>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const editor = $('editor'), treeEl = $('tree'), statusEl = $('status');
+  const pathEl = $('path'), copyBtn = $('copyBtn');
+  const statNodes = $('statNodes'), statDepth = $('statDepth'), statSize = $('statSize');
+  const dotBtn = $('dotBtn'), bracketBtn = $('bracketBtn');
+  const searchInput = $('searchInput'), searchBtn = $('searchBtn'), nextBtn = $('nextBtn');
+  const searchStatus = $('searchStatus');
+
+  let notation = 'dot';
+  let selectedSegs = null, selectedRow = null;
+  let lastData = null, rootRow = null;
+  let matchedRows = [], matchIndex = 0;
+  const MAX_NODES = 8000, MAX_RESULTS = 1000;
+
+  /* ================= 基础工具 ================= */
+  const escKey = k => String(k).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  const isIdent = k => /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(k);
+
+  function buildPath(segs, mode) {
+    let p = '$';
+    for (const s of segs) {
+      if (s.isIndex) p += `[${s.key}]`;
+      else if (mode === 'bracket') p += `['${escKey(s.key)}']`;
+      else p += isIdent(s.key) ? `.${s.key}` : `['${escKey(s.key)}']`;
+    }
+    return p;
+  }
+
+  function setStatus(msg, cls) { statusEl.textContent = msg; statusEl.className = 'status ' + cls; }
+  function setSearch(msg, cls) { searchStatus.textContent = msg; searchStatus.className = 'search-status show ' + cls; }
+  function hideSearchStatus() { searchStatus.className = 'search-status'; searchStatus.textContent = ''; }
+
+  function formatBytes(n) {
+    return n < 1024 ? n + ' B' : n < 1048576 ? (n / 1024).toFixed(1) + ' KB' : (n / 1048576).toFixed(2) + ' MB';
+  }
+
+  function locateError(msg, text) {
+    const m = msg.match(/position (\d+)/);
+    if (m) {
+      const pos = +m[1];
+      const before = text.slice(0, pos);
+      const line = before.split('\n').length;
+      const col = pos - before.lastIndexOf('\n');
+      return `${msg}（约在第 ${line} 行第 ${col} 列）`;
+    }
+    return msg;
+  }
+
+  /* ================= JSONPath 解析器 ================= */
+  function parseJSONPath(input) {
+    const s = String(input).trim();
+    if (!s) throw new Error('路径为空');
+    if (s[0] !== '$') throw new Error('路径必须以 $ 开头');
+    const tokens = [];
+    let i = 1;
+
+    function skipWs() { while (i < s.length && /\s/.test(s[i])) i++; }
+    function readName() {
+      const start = i;
+      while (i < s.length && s[i] !== '.' && s[i] !== '[') i++;
+      if (i === start) throw new Error(`位置 ${i}：缺少属性名`);
+      return s.slice(start, i);
+    }
+    function readQuoted() {
+      const q = s[i]; i++;
+      let out = '';
+      while (i < s.length && s[i] !== q) {
+        if (s[i] === '\\') {
+          i++;
+          if (i >= s.length) throw new Error('转义符后缺少字符');
+          const c = s[i];
+          out += c === 'n' ? '\n' : c === 't' ? '\t' : c === 'r' ? '\r' : c;
+          i++;
+        } else { out += s[i]; i++; }
+      }
+      if (i >= s.length) throw new Error('引号未闭合');
+      i++;
+      return out;
+    }
+    function readInt() {
+      skipWs();
+      const start = i;
+      if (s[i] === '-') i++;
+      while (i < s.length && s[i] >= '0' && s[i] <= '9') i++;
+      if (i === start || (i === start + 1 && s[start] === '-')) return null;
+      return parseInt(s.slice(start, i), 10);
+    }
+    function parseBracket() {
+      i++; skipWs();
+      let tok;
+      if (s[i] === '*') { i++; tok = { t: 'wild' }; }
+      else if (s[i] === '?') {
+        i++; skipWs();
+        if (s[i] !== '(') throw new Error('过滤器应以 "(...)" 包裹，如 [?(@.price<10)]');
+        i++;
+        let depth = 1; const start = i;
+        while (i < s.length && depth > 0) {
+          if (s[i] === '(') depth++;
+          else if (s[i] === ')') depth--;
+          if (depth > 0) i++;
+        }
+        if (depth !== 0) throw new Error('过滤器缺少右括号 )');
+        tok = { t: 'filter', expr: parseFilterExpr(s.slice(start, i)) };
+        i++;
+      }
+      else if (s[i] === "'" || s[i] === '"') {
+        const names = [];
+        for (;;) {
+          names.push(readQuoted()); skipWs();
+          if (s[i] === ',') {
+            i++; skipWs();
+            if (s[i] === "'" || s[i] === '"') continue;
+            throw new Error(`位置 ${i}：逗号后应为带引号的属性名`);
+          }
+          break;
+        }
+        tok = { t: 'child', names };
+      }
+      else if (s[i] === undefined) throw new Error('缺少 ]');
+      else if (/[\d\-:]/.test(s[i])) {
+        const items = [];
+        for (;;) {
+          skipWs();
+          const a = readInt(); skipWs();
+          if (s[i] === ':') {
+            i++; skipWs();
+            const b = readInt(); skipWs();
+            let st = null;
+            if (s[i] === ':') { i++; skipWs(); st = readInt(); skipWs(); }
+            items.push({ slice: true, start: a, end: b, step: st });
+          } else {
+            if (a === null) {
+              if (s[i] === "'" || s[i] === '"') throw new Error('不支持在 [] 中混合索引与属性名');
+              throw new Error(`位置 ${i}：无效的索引`);
+            }
+            items.push({ slice: false, v: a });
+          }
+          if (s[i] === ',') { i++; continue; }
+          break;
+        }
+        tok = items.some(x => x.slice) ? { t: 'slice', items } : { t: 'index', indices: items.map(x => x.v) };
+      }
+      else throw new Error(`位置 ${i}：[] 内出现无法识别的内容 "${s[i]}"`);
+      skipWs();
+      if (s[i] !== ']') throw new Error(`位置 ${i}：缺少 ]`);
+      i++;
+      return tok;
+    }
+
+    while (i < s.length) {
+      const c = s[i];
+      if (c === '.') {
+        i++;
+        if (s[i] === '.') {
+          i++;
+          if (s[i] === '*') { tokens.push({ t: 'descAll' }); i++; }
+          else if (s[i] === '[') { const tk = parseBracket(); tk.desc = true; tokens.push(tk); }
+          else tokens.push({ t: 'desc', name: readName() });
+        } else if (s[i] === '*') { tokens.push({ t: 'wild' }); i++; }
+        else tokens.push({ t: 'child', names: [readName()] });
+      } else if (c === '[') {
+        tokens.push(parseBracket());
+      } else {
+        throw new Error(`位置 ${i}：无法识别的字符 "${c}"`);
+      }
+    }
+    return tokens;
+  }
+
+  function parseFilterExpr(f) {
+    f = f.trim();
+    const m = f.match(/^@(?:\.([^\s<>=!()]+))?\s*(===|==|!=|<=|>=|<|>)?\s*(.*)$/);
+    if (!m) throw new Error('过滤器语法：[?(@.price < 10)]');
+    const left = m[1] !== undefined ? { kind: 'prop', name: m[1] } : { kind: 'self' };
+    let op = m[2];
+    if (op === '===') op = '==';
+    const raw = (m[3] || '').trim();
+    let right, hasRight = raw.length > 0;
+    if (hasRight) {
+      if (/^-?\d+(\.\d+)?$/.test(raw)) right = parseFloat(raw);
+      else if ((raw[0] === "'" && raw.endsWith("'")) || (raw[0] === '"' && raw.endsWith('"'))) right = raw.slice(1, -1);
+      else if (raw === 'true') right = true;
+      else if (raw === 'false') right = false;
+      else if (raw === 'null') right = null;
+      else throw new Error(`过滤器不支持该值: ${raw}`);
+    }
+    if (op && !hasRight) throw new Error('过滤器缺少比较值');
+    return { left, op: op || null, right, hasRight };
+  }
+
+  /* ================= JSONPath 求值器 ================= */
+  function looseEq(a, b) {
+    if (a === b) return true;
+    if (typeof a === 'number' && typeof b === 'string') return b.trim() !== '' && a === +b;
+    if (typeof a === 'string' && typeof b === 'number') return a.trim() !== '' && +a === b;
+    return false;
+  }
+
+  function matchFilter(fx, item) {
+    let l;
+    if (fx.left.kind === 'self') l = item;
+    else l = (item !== null && typeof item === 'object') ? item[fx.left.name] : undefined;
+    if (!fx.op) return l !== undefined;
+    const r = fx.right;
+    switch (fx.op) {
+      case '==': return looseEq(l, r);
+      case '!=': return !looseEq(l, r);
+    }
+    if ((typeof l === 'number' && typeof r === 'number') ||
+        (typeof l === 'string' && typeof r === 'string')) {
+      if (fx.op === '<') return l < r;
+      if (fx.op === '<=') return l <= r;
+      if (fx.op === '>') return l > r;
+      if (fx.op === '>=') return l >= r;
+    }
+    return false;
+  }
+
+  function evalJSONPath(tokens, root) {
+    let overflow = false;
+    function childrenOf(value, segs) {
+      const out = [];
+      if (Array.isArray(value)) {
+        for (let x = 0; x < value.length; x++)
+          out.push({ value: value[x], segs: segs.concat([{ key: String(x), isIndex: true }]) });
+      } else if (value !== null && typeof value === 'object') {
+        for (const k of Object.keys(value))
+          out.push({ value: value[k], segs: segs.concat([{ key: k, isIndex: false }]) });
+      }
+      return out;
+    }
+    function collectDesc(value, segs, acc) {
+      acc.push({ value, segs });
+      for (const c of childrenOf(value, segs)) collectDesc(c.value, c.segs, acc);
+    }
+    function apply(tok, nodes) {
+      const out = [];
+      for (const n of nodes) {
+        const v = n.value;
+        switch (tok.t) {
+          case 'child':
+            if (v !== null && typeof v === 'object') {
+              for (const name of tok.names) {
+                if (Object.prototype.hasOwnProperty.call(v, name))
+                  out.push({ value: v[name], segs: n.segs.concat([{ key: name, isIndex: Array.isArray(v) }]) });
+              }
+            }
+            break;
+          case 'wild':
+            out.push(...childrenOf(v, n.segs));
+            break;
+          case 'index':
+            if (Array.isArray(v)) {
+              for (const ix of tok.indices) {
+                const r = ix < 0 ? v.length + ix : ix;
+                if (r >= 0 && r < v.length)
+                  out.push({ value: v[r], segs: n.segs.concat([{ key: String(r), isIndex: true }]) });
+              }
+            } else if (v !== null && typeof v === 'object') {
+              for (const ix of tok.indices) {
+                const k = String(ix);
+                if (Object.prototype.hasOwnProperty.call(v, k))
+                  out.push({ value: v[k], segs: n.segs.concat([{ key: k, isIndex: false }]) });
+              }
+            }
+            break;
+          case 'slice':
+            if (Array.isArray(v)) {
+              const len = v.length;
+              for (const it of tok.items) {
+                const step = it.step == null ? 1 : it.step;
+                if (step === 0) continue;
+                if (step > 0) {
+                  const a = it.start == null ? 0 : (it.start < 0 ? Math.max(len + it.start, 0) : Math.min(it.start, len));
+                  const b = it.end == null ? len : (it.end < 0 ? Math.max(len + it.end, 0) : Math.min(it.end, len));
+                  for (let x = a; x < b; x += step)
+                    out.push({ value: v[x], segs: n.segs.concat([{ key: String(x), isIndex: true }]) });
+                } else {
+                  const a = it.start == null ? len - 1 : (it.start < 0 ? Math.max(len + it.start, -1) : Math.min(it.start, len - 1));
+                  const b = it.end == null ? -1 : (it.end < 0 ? Math.max(len + it.end, -1) : Math.min(it.end, len));
+                  for (let x = a; x > b; x += step)
+                    out.push({ value: v[x], segs: n.segs.concat([{ key: String(x), isIndex: true }]) });
+                }
+              }
+            }
+            break;
+          case 'desc': {
+            const acc = []; collectDesc(v, n.segs, acc);
+            for (const d of acc) {
+              const dv = d.value;
+              if (dv !== null && typeof dv === 'object' && Object.prototype.hasOwnProperty.call(dv, tok.name))
+                out.push({ value: dv[tok.name], segs: d.segs.concat([{ key: tok.name, isIndex: Array.isArray(dv) }]) });
+            }
+            break;
+          }
+          case 'descAll': {
+            const acc = []; collectDesc(v, n.segs, acc);
+            for (const d of acc) if (d.segs.length > n.segs.length) out.push(d);
+            break;
+          }
+          case 'filter':
+            for (const c of childrenOf(v, n.segs)) if (matchFilter(tok.expr, c.value)) out.push(c);
+            break;
+        }
+        if (out.length > MAX_RESULTS) { overflow = true; break; }
+      }
+      return out;
+    }
+
+    let nodes = [{ value: root, segs: [] }];
+    for (const tok of tokens) {
+      if (tok.desc) {
+        const expanded = [];
+        for (const n of nodes) collectDesc(n.value, n.segs, expanded);
+        const plain = Object.assign({}, tok); delete plain.desc;
+        nodes = apply(plain, expanded);
+      } else {
+        nodes = apply(tok, nodes);
+      }
+      if (!nodes.length) break;
+    }
+
+    const seen = new Set(), paths = [];
+    for (const n of nodes) {
+      const k = JSON.stringify(n.segs.map(x => [x.key, x.isIndex ? 1 : 0]));
+      if (!seen.has(k)) { seen.add(k); paths.push(n.segs); }
+    }
+    return { paths: paths.slice(0, MAX_RESULTS), overflow };
+  }
+
+  /* ================= 树渲染 ================= */
+  let nodeCount = 0, maxDepth = 0, truncated = false;
+
+  function openRow(row) {
+    if (!row._ensureKids) return;
+    row._ensureKids();
+    row._kidsEl.style.display = '';
+    row.classList.add('open');
+  }
+  function closeRow(row) {
+    row._kidsEl.style.display = 'none';
+    row.classList.remove('open');
+  }
+
+  function renderTree(data) {
+    treeEl.innerHTML = '';
+    resetSelection(); clearMatches();
+    nodeCount = 0; maxDepth = 0; truncated = false; rootRow = null;
+
+    function build(key, value, nodePath, container, depth, isRoot, parentIsArray, parentNode) {
+      if (truncated) return;
+      nodeCount++; maxDepth = Math.max(maxDepth, depth);
+      if (nodeCount > MAX_NODES) { truncated = true; return; }
+
+      const imArray = Array.isArray(value);
+      const isContainer = value !== null && typeof value === 'object';
+      const entries = isContainer
+        ? (imArray ? value.map((v, i) => [String(i), v]) : Object.entries(value))
+        : [];
+
+      const row = document.createElement('div');
+      row.className = 'row';
+      row.style.paddingLeft = (depth * 18 + 8) + 'px';
+      row._nodePath = nodePath;        // 该节点自身的完整路径（根为 []）
+      row._kidsEl = null;
+      row._childRows = null;
+
+      const arrow = document.createElement('span');
+      arrow.className = 'arrow' + (entries.length ? '' : ' none');
+      arrow.textContent = '▸';
+
+      const keyEl = document.createElement('span');
+      keyEl.className = 'key' + (isRoot ? ' root' : parentIsArray ? ' idx' : '');
+      keyEl.textContent = isRoot ? '$' : (parentIsArray ? `[${key}]` : JSON.stringify(key) + ':');
+
+      const valEl = document.createElement('span');
+      if (!isContainer) {
+        valEl.className = 'val ' + (value === null ? 'null' : typeof value);
+        valEl.textContent = value === null ? 'null'
+          : typeof value === 'string' ? JSON.stringify(value) : String(value);
+        valEl.title = valEl.textContent;
+      } else {
+        valEl.className = 'summary';
+        valEl.textContent = imArray ? `Array(${entries.length})` : `{${entries.length}}`;
+      }
+      row.append(arrow, keyEl, valEl);
+
+      const kids = document.createElement('div');
+      kids.className = 'kids';
+      row._kidsEl = kids;
+
+      row._ensureKids = entries.length ? () => {
+        if (!kids.dataset.built) {
+          kids.dataset.built = '1';
+          row._childRows = new Map();
+          for (const [k, v] of entries) {
+            // 子节点路径 = 当前节点路径 + 自身段（isIndex 取决于当前节点是否为数组）
+            build(k, v, nodePath.concat([{ key: k, isIndex: imArray }]),
+                  kids, depth + 1, false, imArray, row);
+          }
+        }
+        return row._childRows;
+      } : null;
+
+      if (entries.length) {
+        arrow.addEventListener('click', e => {
+          e.stopPropagation();
+          row.classList.contains('open') ? closeRow(row) : openRow(row);
+        });
+      }
+
+      row.addEventListener('click', () => {
+        if (selectedRow) selectedRow.classList.remove('selected');
+        selectedRow = row; row.classList.add('selected');
+        selectedSegs = nodePath;
+        updatePath();
+      });
+
+      container.append(row, kids);
+      if (isRoot) rootRow = row;
+      if (parentNode) parentNode._childRows.set(String(key), row);
+
+      if (entries.length && depth < 2) openRow(row);
+      else kids.style.display = 'none';
+    }
+
+    build('', data, [], treeEl, 0, true, false, null);
+    updateStats(truncated ? MAX_NODES + '+' : nodeCount, maxDepth);
+  }
+
+  function updateStats(nodes, depth) {
+    statNodes.textContent = '节点 ' + nodes;
+    statDepth.textContent = '深度 ' + depth;
+  }
+
+  /* ================= 路径显示与复制 ================= */
+  function resetSelection() {
+    selectedSegs = null; selectedRow = null;
+    pathEl.textContent = ''; copyBtn.disabled = true;
+  }
+  function updatePath() {
+    if (!selectedSegs) return;
+    pathEl.textContent = buildPath(selectedSegs, notation);
+    copyBtn.disabled = false;
+  }
+  dotBtn.addEventListener('click', () => setNotation('dot'));
+  bracketBtn.addEventListener('click', () => setNotation('bracket'));
+  function setNotation(n) {
+    notation = n;
+    dotBtn.classList.toggle('active', n === 'dot');
+    bracketBtn.classList.toggle('active', n === 'bracket');
+    updatePath();
+  }
+  copyBtn.addEventListener('click', async () => {
+    const text = pathEl.textContent;
+    if (!text) return;
+    try { await navigator.clipboard.writeText(text); }
+    catch {
+      const ta = document.createElement('textarea');
+      ta.value = text; document.body.appendChild(ta);
+      ta.select(); document.execCommand('copy'); ta.remove();
+    }
+    const old = copyBtn.textContent;
+    copyBtn.textContent = '✓ 已复制';
+    setTimeout(() => copyBtn.textContent = old, 1200);
+  });
+
+  /* ================= 路径查找 ================= */
+  function clearMatches() {
+    for (const r of matchedRows) r.classList.remove('match', 'match-first');
+    matchedRows = []; matchIndex = 0;
+    nextBtn.hidden = true;
+  }
+
+  function locateRow(segs) {
+    let cur = rootRow;
+    for (const seg of segs) {
+      if (!cur || !cur._ensureKids) return null;
+      openRow(cur);                              // 沿途展开
+      const m = cur._childRows;
+      if (!m) return null;
+      cur = m.get(String(seg.key));
+      if (!cur) return null;
+    }
+    return cur;
+  }
+
+  function runSearch(scroll = true) {
+    clearMatches();
+    const expr = searchInput.value.trim();
+    if (!expr) { hideSearchStatus(); return; }
+    if (lastData === null) { setSearch('✕ 请先在左侧输入合法的 JSON', 'err'); return; }
+    let tokens, res;
+    try { tokens = parseJSONPath(expr); }
+    catch (e) { setSearch('✕ 路径语法错误：' + e.message, 'err'); return; }
+    try { res = evalJSONPath(tokens, lastData); }
+    catch (e) { setSearch('✕ ' + e.message, 'err'); return; }
+
+    const paths = res.paths;
+    if (!paths.length) { setSearch('✕ 未找到匹配节点', 'err'); return; }
+
+    const rows = [];
+    for (const segs of paths) { const r = locateRow(segs); if (r) rows.push(r); }
+    matchedRows = rows;
+    rows.forEach(r => r.classList.add('match'));
+    if (rows.length) {
+      matchIndex = 0;
+      rows[0].classList.add('match-first');
+      if (scroll) rows[0].scrollIntoView({ block: 'center', behavior: 'smooth' });
+      nextBtn.hidden = rows.length < 2;
+      nextBtn.textContent = `下一个 1/${rows.length}`;
+    }
+    let msg = `✓ 找到 ${paths.length} 个匹配节点`;
+    if (res.overflow) msg += '（匹配过多，仅取前 1000 个）';
+    if (rows.length < paths.length) msg += `，其中 ${paths.length - rows.length} 个未在树中渲染`;
+    setSearch(msg, 'ok');
+  }
+
+  searchBtn.addEventListener('click', () => runSearch(true));
+  searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') runSearch(true); });
+  nextBtn.addEventListener('click', () => {
+    if (!matchedRows.length) return;
+    matchIndex = (matchIndex + 1) % matchedRows.length;
+    const r = matchedRows[matchIndex];
+    r.classList.remove('match-first'); void r.offsetWidth; r.classList.add('match-first');
+    r.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    nextBtn.textContent = `下一个 ${matchIndex + 1}/${matchedRows.length}`;
+  });
+
+  /* ================= 解析与工具栏 ================= */
+  function parse() {
+    const text = editor.value;
+    statSize.textContent = formatBytes(new Blob([text]).size);
+    if (!text.trim()) {
+      lastData = null;
+      treeEl.innerHTML = '<div class="empty-hint">在左侧粘贴或输入 JSON<br>结构树将显示在这里，<code>点击任意节点</code>即可复制它的路径</div>';
+      setStatus('等待输入…（自动解析，Ctrl+Enter 快速格式化）', 'info');
+      resetSelection(); updateStats(0, 0); clearMatches(); hideSearchStatus();
+      return;
+    }
+    let data;
+    try { data = JSON.parse(text); }
+    catch (e) {
+      lastData = null;
+      treeEl.innerHTML = '<div class="empty-hint">✕ JSON 解析失败，请检查语法</div>';
+      setStatus('✕ ' + locateError(e.message, text), 'err');
+      resetSelection(); updateStats(0, 0); clearMatches();
+      return;
+    }
+    lastData = data;
+    renderTree(data);
+    setStatus('✓ 解析成功，点击节点获取路径', 'ok');
+    if (searchInput.value.trim()) runSearch(false);
+    else hideSearchStatus();
+  }
+
+  $('formatBtn').addEventListener('click', format);
+  function format() {
+    try {
+      editor.value = JSON.stringify(JSON.parse(editor.value), null, 2);
+      parse();
+    } catch (e) { setStatus('✕ 无法格式化：' + e.message, 'err'); }
+  }
+
+  $('clearBtn').addEventListener('click', () => {
+    editor.value = ''; searchInput.value = ''; parse();
+  });
+
+  $('exampleBtn').addEventListener('click', () => {
+    editor.value = JSON.stringify({
+      store: {
+        book: [
+          { category: 'reference', author: 'Nigel Rees',     title: 'Sayings of the Century', price: 8.95 },
+          { category: 'fiction',   author: 'Evelyn Waugh',   title: 'Sword of Honour',        price: 12.99 },
+          { category: 'fiction',   author: 'Herman Melville', title: 'Moby Dick', isbn: '0-553-21311-3', price: 8.99 },
+          { category: 'fiction',   author: 'J. R. R. Tolkien', title: 'The Lord of the Rings', isbn: '0-395-19395-8', price: 22.99 }
+        ],
+        bicycle: { color: 'red', price: 19.95 }
+      },
+      expensive: 10
+    }, null, 2);
+    parse();
+  });
+
+  editor.addEventListener('input', () => { clearTimeout(parse._t); parse._t = setTimeout(parse, 350); });
+  editor.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); format(); }
+  });
+})();
+</script>
+</body>
+</html>

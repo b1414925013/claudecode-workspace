@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234fae5a'/%3E%3Cpath d='M32 50 C24 42 24 28 32 14 C40 28 40 42 32 50Z' fill='%23fff'/%3E%3Cpath d='M20 46 C15 42 15 32 20 22 C25 32 25 42 20 46Z' fill='%23e2f7df'/%3E%3Cpath d='M44 46 C49 42 49 32 44 22 C39 32 39 42 44 46Z' fill='%23e2f7df'/%3E%3C/svg%3E">
+<title>《青草物语·割草求生》游戏策划文档</title>
+<style>
+  :root {
+    --bg:#f6f9ff; --panel:#ffffff; --ink:#233046; --muted:#6b7a99;
+    --grass:#4fae5a; --grass2:#79c96b; --sun:#ffce4d; --blue:#4f8cff;
+    --purple:#8a6bff; --pink:#ff7aa2; --red:#ff6b6b; --line:#e3ebf6;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif; background:var(--bg); color:var(--ink); line-height:1.7; }
+  header {
+    background:linear-gradient(135deg,#7fd0a8 0%,#4fae5a 45%,#3a8fbf 100%);
+    color:#fff; padding:52px 40px 44px;
+  }
+  header .tag { display:inline-block; background:rgba(255,255,255,.22); border-radius:99px; padding:4px 14px; font-size:12.5px; margin-bottom:16px; letter-spacing:.5px; }
+  header h1 { font-size:34px; font-weight:800; letter-spacing:1px; }
+  header p { margin-top:8px; font-size:15px; opacity:.92; max-width:720px; }
+  .wrap { max-width:1080px; margin:0 auto; padding:26px 20px 80px; }
+  .meta { display:flex; gap:14px; flex-wrap:wrap; margin:20px 0 6px; }
+  .meta .chip { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:8px 14px; font-size:13px; box-shadow:0 2px 8px rgba(35,48,70,.05); }
+  .meta .chip b { color:var(--grass); }
+  section { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:26px 28px; margin:22px 0; box-shadow:0 4px 18px rgba(35,48,70,.06); }
+  section h2 { font-size:22px; margin-bottom:6px; display:flex; align-items:center; gap:10px; }
+  section h2 .num { width:28px; height:28px; border-radius:9px; display:grid; place-items:center; font-size:14px; color:#fff; background:var(--grass); flex-shrink:0; }
+  section h3 { font-size:15.5px; color:var(--grass); margin:18px 0 6px; }
+  section p, section li { font-size:14.5px; color:#3a4a66; }
+  ul { padding-left:22px; }
+  table { width:100%; border-collapse:collapse; margin:10px 0; table-layout:fixed; font-size:13.5px; }
+  colgroup col { width:auto; }
+  th { background:#eef4ec; text-align:left; padding:8px 10px; font-size:13px; color:#3a5c45; }
+  td { padding:8px 10px; border-top:1px solid var(--line); vertical-align:top; }
+  tr:hover td { background:#fafcff; }
+  .tier { display:inline-block; padding:1px 9px; border-radius:6px; font-size:12px; color:#fff; }
+  .tier.t0{background:#9aa8c0}.tier.t1{background:var(--blue)}.tier.t2{background:var(--purple)}.tier.t3{background:var(--pink)}
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px; }
+  .card { border:1px solid var(--line); border-radius:12px; padding:16px 16px 14px; background:#fbfdff; }
+  .card h4 { font-size:14.5px; margin-bottom:6px; }
+  .card .t { color:var(--muted); font-size:12.5px; margin-bottom:6px; }
+  .card .s { font-size:13px; color:#3a4a66; }
+  .badge { display:inline-block; background:#eef4ec; border-radius:6px; padding:2px 8px; font-size:12px; color:#3a5c45; margin-right:6px; }
+  .timeline { position:relative; margin:14px 0 4px; padding-left:26px; }
+  .timeline::before { content:""; position:absolute; left:8px; top:6px; bottom:6px; width:3px; border-radius:3px; background:linear-gradient(#7fd0a8,#ffce4d,#ff7aa2); }
+  .tl { position:relative; margin:16px 0; }
+  .tl::before { content:""; position:absolute; left:-22px; top:5px; width:11px; height:11px; border-radius:50%; background:#fff; border:3px solid var(--grass); box-sizing:border-box; }
+  .tl.boss::before { border-color:var(--purple); }
+  .tl.final::before { border-color:var(--red); }
+  .tl .m { font-weight:700; font-size:13.5px; }
+  .tl .d { color:var(--muted); font-size:13px; }
+  .tagline { color:var(--muted); font-size:14px; margin:10px 0 2px; }
+  code { background:#eef4ec; border-radius:5px; padding:1px 7px; font-size:12.5px; color:#3a5c45; }
+  footer { text-align:center; color:var(--muted); font-size:13px; margin-top:20px; }
+  @media (max-width:700px){
+    header { padding:36px 20px 32px; } header h1{ font-size:26px; }
+    section{ padding:20px 16px; } .wrap{ padding:16px 12px 60px; }
+    table{ font-size:12.5px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="tag">Game Design Document · v2.0（含开发迭代记录）</div>
+  <h1>青草物语 · 割草求生</h1>
+  <p>卡通 3D 俯视角割草求生网页游戏策划文档 —— 参考《吸血鬼幸存者》核心循环，WebGL 浏览器运行，单局 15 分钟，挑战终极怪物通关。</p>
+</header>
+<div class="wrap">
+  <div class="meta">
+    <div class="chip">类型：割草 · 生存 · 自动技能 RPG</div>
+    <div class="chip">引擎：<b>Three.js (WebGL)</b></div>
+    <div class="chip">视角：<b>上帝俯视角</b></div>
+    <div class="chip">单局时长：<b>≤ 15 分钟</b></div>
+    <div class="chip">存档：<b>localStorage 本地</b></div>
+  </div>
+
+  <section>
+    <h2><span class="num">1</span>核心玩法简介</h2>
+    <p class="tagline">一句话：你扮演一位小小探险家，自动放技能、走位捡金币，在铺天盖地的怪物潮中活满 15 分钟。</p>
+    <ul>
+      <li><b>自动战斗</b>：角色无需手动施法，已装备的技能按冷却自动释放，玩家只管走位、躲障碍、吃掉落。</li>
+      <li><b>成长循环</b>：击杀怪物 → 获得经验 → 经验条满升级 → 弹出技能三选一 → 战力变强 → 挑战更强怪物。</li>
+      <li><b>时间驱动</b>：怪物随对局时间动态增密；每 5 分钟刷新 1 只 BOSS，第 15 分钟刷新终极怪物，击杀即通关。</li>
+      <li><b>风险与抉择</b>：升级时三选一必须二择一放弃，技能流派由玩家在局内逐步构筑；拾取物（金币/血瓶/buff）决定续航与爆发。</li>
+      <li><b>局外积累</b>：对局获得的金币永久累计，用于解锁更多初始被动各异的人类角色。</li>
+      <li><b>失败即结束</b>：角色生命归零 → 本局立即失败；死亡无法复活（局内无复活机制）。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="num">2</span>美术规范</h2>
+    <h3>风格关键词</h3>
+    <p>卡通 3D（Toon Shading）· 明亮清新 · 高饱和低对比 · 圆润几何 · 华丽发光特效。</p>
+    <h3>色彩基调</h3>
+    <div class="grid">
+      <div class="card"><h4>草地大地</h4><div class="t">主基调 · 大面积</div><div class="s"><span class="badge">#4FAE5A</span>鲜草绿，配浅黄绿斑块，营造明亮生机</div></div>
+      <div class="card"><h4>天空与光照</h4><div class="t">环境 · 方向</div><div class="s"><span class="badge">#8ED4F0</span>晴空蓝渐变 + 柔和主光 + 暖色补光，避免死平</div></div>
+      <div class="card"><h4>玩家 / 角色</h4><div class="t">主角 · 高辨识</div><div class="s"><span class="badge">#FF7AA2</span>粉 / 蓝 / 橙等鲜明色，圆头矮胖 Q 版比例</div></div>
+      <div class="card"><h4>怪物</h4><div class="t">敌对 · 色阶分级</div><div class="s">绿→蓝→紫→红，随强度由浅到深，BOSS 体型明显放大</div></div>
+      <div class="card"><h4>技能特效</h4><div class="t">华丽 · 发光</div><div class="s">半透明 MeshBasic 发光球 + 粒子拖尾 + 冲击环，色相随技能变化</div></div>
+      <div class="card"><h4>掉落物</h4><div class="t">拾取 · 脉冲动画</div><div class="s">金币金黄、血瓶绯红、buff 宝石彩虹渐变，漂浮旋转</div></div>
+    </div>
+    <h3>模型规格</h3>
+    <ul>
+      <li>全部模型由基础几何体组合：角色 = 圆头 + 圆柱身 + 手臂；怪物 = 球/锥/方块组合，按类型换色。</li>
+      <li>材质：ToonMaterial / LambertMaterial 为主，配合 2 级阴影（远物体关阴影降开销）。</li>
+      <li>特效：MeshBasicMaterial（不受光，天然发光）+ 点/粒子系统做拖尾与爆发，bloom 依赖场景明度而非后处理。</li>
+      <li>Drawcall 预算：同屏怪物 ≤ 400，障碍物用实例化合并，像素比上限 2。</li>
+    </ul>
+    <h3>美术落地（已实现）</h3>
+    <p>上线版本已从「几何体组合」切换到<b>全卡通 3D 贴图精灵</b>：6 角色四向+攻击帧、6 怪物正面/背面帧、9 类障碍、6 技能特效、树木与地貌全部采用贴图；仙人掌等障碍白底/留白已按贴图去白处理。详见 <b>§10 开发迭代记录</b>。</p>
+  </section>
+
+  <section>
+    <h2><span class="num">3</span>怪物刷新时间表</h2>
+    <p class="tagline">怪物随分钟动态生成，强度与密度随对局推进线性爬坡。</p>
+    <div class="timeline">
+      <div class="tl"><div class="m">0:00 – 1:00</div><div class="d">新手潮 · 小怪间隔 1.2s，单只血量 10，移速慢（难度Ⅰ）</div></div>
+      <div class="tl"><div class="m">1:00 – 3:00</div><div class="d">增密 · 间隔缩至 0.9s，移速 +12%（难度Ⅱ）</div></div>
+      <div class="tl"><div class="m">3:00 – 5:00</div><div class="d">强化 · 小怪血量 ×2，间隔 0.7s，出现冲刺型（难度Ⅲ）</div></div>
+      <div class="tl boss"><div class="m">5:00</div><div class="d"><b>BOSS 刷新</b> · 血量 400，体型 2.5×，掉落大量金币；击杀后进入 BOSS 冷却（下一只 5 分钟）</div></div>
+      <div class="tl"><div class="m">5:00 – 10:00</div><div class="d">高压潮 · 间隔 0.5s，混合精英怪，经验值 ×1.6（难度Ⅳ）</div></div>
+      <div class="tl boss"><div class="m">10:00</div><div class="d"><b>第二只 BOSS</b> · 血量 800，移速 +20%，新增散射弹（难度Ⅴ）</div></div>
+      <div class="tl"><div class="m">10:00 – 14:30</div><div class="d">终局冲刺 · 间隔 0.35s，怪物经验 ×2，掉落率提升（难度Ⅵ）</div></div>
+      <div class="tl"><div class="m">14:30</div><div class="d">最终预警 · 全屏提示"终极怪物即将降临"（难度Ⅶ）</div></div>
+      <div class="tl final"><div class="m">15:00</div><div class="d"><b>终极怪物刷新</b> · 血量 2500，超大体型，击杀即<b>通关胜利</b>；若被反杀则失败</div></div>
+    </div>
+    <h3>刷怪公式（供实现参考）</h3>
+    <p>生成间隔 <code>spawnGap = max(0.35, 1.2 - minute × 0.06) 秒</code>；单怪经验 <code>exp = 3 + floor(minute/2)</code>；移速 <code>speed = 1.6 + minute × 0.09</code>。每波最多同时存活 <code>80 + minute × 12</code> 只。</p>
+  </section>
+
+  <section>
+    <h2><span class="num">4</span>技能池设计</h2>
+    <p class="tagline">局内升级三选一；主动技能自动释放，被动技能常驻。等级上限 5。</p>
+    <table>
+      <colgroup><col style="width:18%"><col style="width:14%"><col style="width:42%"><col style="width:26%"></colgroup>
+      <tr><th>技能</th><th>类型</th><th>描述</th><th>每级成长</th></tr>
+      <tr><td>火球术</td><td>主动 · 直线弹</td><td>朝最近敌人发射火球，命中爆炸范围伤害</td><td>伤害 +30%，弹数 +1，射速 +15%</td></tr>
+      <tr><td>冰霜新星</td><td>主动 · 范围</td><td>自身周围冰环，冰冻并减速敌人</td><td>半径 +20%，伤害 +35%，CD -10%</td></tr>
+      <tr><td>闪电链</td><td>主动 · 连锁</td><td>电击最近敌人并弹射 2–4 个目标</td><td>弹射 +1，伤害 +28%，范围 +15%</td></tr>
+      <tr><td>旋风飞刃</td><td>主动 · 环绕</td><td>环绕自身的旋转飞刃，持续切割接触敌人</td><td>数量 +1，伤害 +30%，半径 +12%</td></tr>
+      <tr><td>神圣喷涌</td><td>主动 · 追踪</td><td>圣光球自动追踪最近敌人，超高伤害</td><td>冷却 -15%，伤害 +35%</td></tr>
+      <tr><td>藤蔓缠绕</td><td>主动 · 陷阱</td><td>在脚下生成缠绕区域，束缚并持续伤害</td><td>范围 +22%，持续时间 +30%</td></tr>
+      <tr><td>攻击强化</td><td>被动</td><td>全部技能与普攻伤害 +12%</td><td>再 +12% / 级</td></tr>
+      <tr><td>急速</td><td>被动</td><td>移动速度 +10%</td><td>再 +8% / 级</td></tr>
+      <tr><td>坚韧</td><td>被动</td><td>最大生命 +25</td><td>再 +25 / 级</td></tr>
+      <tr><td>回能</td><td>被动</td><td>技能冷却 -12%</td><td>再 -10% / 级</td></tr>
+      <tr><td>贪婪</td><td>被动</td><td>金币与经验获取 +15%</td><td>再 +15% / 级</td></tr>
+      <tr><td>再生</td><td>被动</td><td>每秒回复 0.5 生命</td><td>再 +0.5 / 级</td></tr>
+    </table>
+    <p class="tagline">同技能可重复选取以升级（三选中若出现已满级技能则不参与抽取）。</p>
+  </section>
+
+  <section>
+    <h2><span class="num">5</span>角色设计</h2>
+    <p class="tagline">人类角色，局外用金币解锁，局内拥有独立初始被动。</p>
+    <table>
+      <colgroup><col style="width:16%"><col style="width:14%"><col style="width:34%"><col style="width:18%"><col style="width:18%"></colgroup>
+      <tr><th>角色</th><th>解锁</th><th>初始被动</th><th>风格定位</th><th>建议价格</th></tr>
+      <tr><td>小勇士</td><td class="tier t0">默认</td><td>生命 +30，普攻伤害 +15%</td><td>均衡 · 稳扎稳打</td><td>免费</td></tr>
+      <tr><td>小法师</td><td class="tier t1">金币</td><td>初始自带火球术 Lv1，技能冷却 -10%</td><td>爆发 · 范围输出</td><td>200</td></tr>
+      <tr><td>小游侠</td><td class="tier t1">金币</td><td>移速 +18%，火球射速更快</td><td>机动 · 风筝流</td><td>300</td></tr>
+      <tr><td>小牧师</td><td class="tier t2">金币</td><td>初始自带再生被动 Lv1，血瓶效果 +50%</td><td>续航 · 不死流</td><td>500</td></tr>
+      <tr><td>小狂战</td><td class="tier t2">金币</td><td>攻击 +25% 但移速 -5%，初始坚韧 Lv1</td><td>近身 · 高风险高伤</td><td>600</td></tr>
+      <tr><td>小学者</td><td class="tier t3">金币</td><td>经验获取 +25%，升级三选一可多刷新 1 次</td><td>成长 · 快速成型</td><td>800</td></tr>
+    </table>
+    <h3>角色外形（美术说明）</h3>
+    <p>统一 Q 版比例：圆头 + 短圆柱身 + 短手臂；通过头饰、披风配色区分职业（法师尖帽、游侠帽沿、牧师头环、狂战盔角、学者圆框眼镜）。</p>
+  </section>
+
+  <section>
+    <h2><span class="num">6</span>经济系统</h2>
+    <ul>
+      <li><b>金币来源</b>：击杀普通怪 1–3 枚、精英怪 8 枚、BOSS 40–60 枚、终极怪物 200 枚；地图随机金币堆 5 枚。</li>
+      <li><b>金币用途</b>：局外解锁角色（永久）；局内不消耗金币（保证决策聚焦于技能构筑）。</li>
+      <li><b>经验来源</b>：击杀怪物、部分 buff 短暂加成；经验满升级，升级不保留溢出。</li>
+      <li><b>存档字段（localStorage）</b>：<code>totalCoins</code>（累计金币）、<code>unlockedRoles</code>（解锁角色数组）、<code>bestRecords</code>（最优通关/存活记录，含角色、存活时间、通关与否）。</li>
+      <li><b>掉率</b>：普通怪金币 30%、血瓶 6%、buff 4%；BOSS 必掉金币堆 + 高概率血瓶。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="num">7</span>UI 布局</h2>
+    <table>
+      <colgroup><col style="width:24%"><col style="width:46%"><col style="width:30%"></colgroup>
+      <tr><th>区域</th><th>内容</th><th>说明</th></tr>
+      <tr><td>左上角</td><td>经验条（当前等级/进度）+ 剩余对局时间倒计时</td><td>常驻，进度条彩色渐变</td></tr>
+      <tr><td>右上角</td><td>金币数量（局外累计 + 本局获得）</td><td>金色数字，获取时飘字</td></tr>
+      <tr><td>底部中央</td><td>技能图标栏（已装备技能 + 等级角标）</td><td>图标常驻，冷却遮罩</td></tr>
+      <tr><td>中央弹窗</td><td>升级三选一卡片</td><td>点击卡片即选择并关闭，暂停对局</td></tr>
+      <tr><td>全屏弹窗</td><td>游戏结束（胜利/失败）+ 统计 + 重开</td><td>区分两套配色与文案</td></tr>
+      <tr><td>主菜单</td><td>开始 / 角色选择商店 / 存档说明</td><td>局外导航，展示金币与解锁进度</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2><span class="num">8</span>胜利 / 失败判定</h2>
+    <ul>
+      <li><b>胜利</b>：第 15 分钟终极怪物刷新并成功击杀 → 弹出胜利结算，记入通关记录。</li>
+      <li><b>失败</b>：角色生命归零（含被终极怪物反杀）→ 本局立即结束，弹失败结算。</li>
+      <li><b>结算内容</b>：存活时长、击杀数、本局金币、是否通关；金币累加进 localStorage。</li>
+      <li><b>时间规则</b>：单局 15 分钟为上限；15 分钟前未死则必然进入终极怪物阶段。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="num">9</span>平衡数值建议</h2>
+    <div class="grid">
+      <div class="card"><h4>玩家基础</h4><div class="t">默认小勇士</div><div class="s">生命 100 · 移速 5.5 单位/秒 · 碰撞伤害 25 / 次（1s 内置冷却）</div></div>
+      <div class="card"><h4>技能 DPS 参考</h4><div class="t">Lv1 目标值</div><div class="s">火球 30 / 1.6s、冰霜 40 / 4s、闪电 25 / 2.2s、飞刃 12 / 0.5s（每片）</div></div>
+      <div class="card"><h4>升级曲线</h4><div class="t">经验需求</div><div class="s">所需经验 = 8 × (等级+1)^1.6，前 6 级快速成型，中后期缓慢</div></div>
+      <div class="card"><h4>怪物强度</h4><div class="t">难度锚点</div><div class="s">第 15 分钟终极怪应≈玩家 3 个满级输出技能 + 走位的总和，确保通关需完整构筑</div></div>
+      <div class="card"><h4>伤害校验</h4><div class="t">防秒杀</div><div class="s">任何单次技能对玩家伤害不超过当前生命 40%，保证走位有意义</div></div>
+      <div class="card"><h4>经济校验</h4><div class="t">解锁节奏</div><div class="s">1 局通关金币 ≈ 800–1200，恰好够解锁 1 个高价角色，形成"打关→解锁"循环</div></div>
+    </div>
+    <h3>性能预算</h3>
+    <ul>
+      <li>目标 60 FPS（桌面）/ 30 FPS（低端移动）；不达标自动降像素比至 1、关阴影。</li>
+      <li>同屏实体数预算 ≤ 500；怪物用合并几何体 + 共享材质，障碍物实例化。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="num">10</span>开发迭代记录</h2>
+    <p class="tagline">从单 HTML 原型到多文件工程、从几何体到全贴图卡通风的完整迭代，均已落地为可运行版本。</p>
+    <div class="timeline">
+      <div class="tl"><div class="m">v1.0 · 策划 + 单 HTML 原型</div><div class="d">产出《游戏策划文档》与单文件 Three.js 可运行版（约 6.3MB 全内联）。实现自动战斗、升级三选一、BOSS / 终极怪、localStorage 存档、6 角色解锁。</div></div>
+      <div class="tl"><div class="m">v1.1 · 多文件工程重构</div><div class="d">单文件过臃肿、JS 高耦合，拆分 <code>index.html + css/style.css + js/01_config~12_boot + assets/tex_data.js</code>；贴图 base64 内联，解决 file:// 下 WebGL 加载本地图片被 CORS 拦截。对局逻辑仍在 JS（浏览器端必须），Python 仅承担构建 / 贴图处理脚本。</div></div>
+      <div class="tl"><div class="m">v1.2 · 贴图化改造</div><div class="d">角色 / 怪物 / 障碍 / 地貌从几何体全部切换为卡通 3D 贴图精灵：6 角色四向 + 攻击帧、6 怪物正面 / 背面帧、9 类障碍（石堆 / 喷泉 / 木桶 / 木箱 / 栅栏 / 塔楼 / 石山 / 仙人掌）、6 技能特效（火球 / 冰霜新星 / 闪电 / 旋风飞刃 / 圣光 / 藤蔓）、树木阔叶 / 针叶；障碍按贴图比例收窄、仙人掌去白。</div></div>
+      <div class="tl"><div class="m">v1.3 · 玩法与手感</div><div class="d">世界边界（150）；取消鼠标拖动旋转视角；取消河流不可通行（改玩家减速）；BOSS 体型增大（2.0 / 终极 2.5）；怪物血量大幅上调（史莱姆 85 → 终极 16000）防秒杀；怪物四向朝向与障碍绕行；角色攻击帧；冰霜新星透明化 + 中心掏空（不遮玩家）；树木成片（每丛 4–6 棵）；闪电链电弧；6 角色专属初始技能（勇士=飞刃、法师=火球、游侠=圣光、牧师=藤蔓+再生、狂战=闪电+坚韧、学者=冰霜新星）。</div></div>
+      <div class="tl"><div class="m">v1.4 · 贴图逐帧修复</div><div class="d">排查 6 角色上下左右贴图的空白 / 四向不齐：法师右帧缺身体、游侠右帧实为左帧、牧师右帧五官空白 → 分帧重生成 / 镜像修复，最终完成牧师四向、法师四向、游侠左 / 右等逐张重建并接入。</div></div>
+      <div class="tl"><div class="m">v1.5 · 收尾修复（本次会话）</div><div class="d">修复 <code>tex_data.js</code> 语法损坏导致的 <code>monsters is not defined</code>（从 assets 全部 PNG 完整重建，<code>node --check</code> 通过，浏览器实测 6 角色 × 5 帧全部加载成功）；仙人掌贴图边缘去白并裁切放大回原高；移除开始页角色选择界面的 <code>ui-banner.jpg</code>。</div></div>
+    </div>
+
+    <h3>策划建议 → 落地实现状态</h3>
+    <table>
+      <colgroup><col style="width:30%"><col style="width:34%"><col style="width:36%"></colgroup>
+      <tr><th>策划项</th><th>原建议</th><th>已实现</th></tr>
+      <tr><td>美术载体</td><td>基础几何体 + Toon 材质</td><td>全贴图卡通精灵（角色 / 怪物 / 障碍 / 技能 / 地貌）</td></tr>
+      <tr><td>技能</td><td>全局技能池、局内三选一</td><td>6 主动 + 4 被动 + 6 角色专属初始技能，升级三选一</td></tr>
+      <tr><td>角色</td><td>金币解锁 6 角色</td><td>6 角色 × 四向 + 攻击帧，独立被动 / 初始技能</td></tr>
+      <tr><td>怪物强度</td><td>终极怪 ≈ 3 个满级输出</td><td>血量上调至 16000，搭配体型 / 朝向 / 绕障</td></tr>
+      <tr><td>存档</td><td>localStorage：金币 / 解锁 / 记录</td><td>localStorage 持久化，累计金币 + 解锁 + 通关</td></tr>
+      <tr><td>本地运行</td><td>file:// 双击直跑</td><td>多文件工程 + 贴图内联，双击 <code>index.html</code> 运行</td></tr>
+    </table>
+  </section>
+
+  <footer>《青草物语·割草求生》策划文档 v2.0 · 配套可运行多文件游戏见同目录 <code>index.html</code>（双击即可开始）</footer>
+</div>
+</body>
+</html>

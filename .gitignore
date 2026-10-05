@@ -6,3 +6,4 @@ output
 */_pycache_/
 *.pyc
 dist/
+*.log

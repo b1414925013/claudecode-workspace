@@ -1,0 +1,51 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]: NebulaTopo
+    - button "自动布局" [ref=e4] [cursor=pointer]
+    - button "生成 SQL" [ref=e5] [cursor=pointer]
+    - button "导出图片" [ref=e6] [cursor=pointer]
+    - button "加载示例" [ref=e7] [cursor=pointer]
+    - button "清空" [ref=e8] [cursor=pointer]
+    - button "帮助" [ref=e10] [cursor=pointer]
+    - generic [ref=e11]: "节点: 1 · 边: 0"
+  - generic [ref=e12]:
+    - generic [ref=e13]:
+      - generic [ref=e14]:
+        - heading "节点类型 拖拽到画布" [level=3] [ref=e15]:
+          - text: 节点类型
+          - generic [ref=e16]: 拖拽到画布
+        - generic [ref=e17]:
+          - generic [ref=e18]: "!"
+          - generic [ref=e19]: 告警 (alarm)
+        - generic [ref=e20]:
+          - generic [ref=e21]: "N"
+          - generic [ref=e22]: 网元 (ne)
+        - generic [ref=e23]:
+          - generic [ref=e24]: B
+          - generic [ref=e25]: 单板 (board)
+        - generic [ref=e26]:
+          - generic [ref=e27]: P
+          - generic [ref=e28]: 端口 (port)
+      - generic [ref=e29]:
+        - heading "边类型 点击选择" [level=3] [ref=e30]:
+          - text: 边类型
+          - generic [ref=e31]: 点击选择
+        - generic [ref=e34] [cursor=pointer]: trigger 告警→告警
+        - generic [ref=e37] [cursor=pointer]: link 设备↔设备
+        - generic [ref=e40] [cursor=pointer]: leave 父设备→子设备
+        - generic [ref=e43] [cursor=pointer]: happen 告警→设备
+        - generic [ref=e46] [cursor=pointer]: enhance 告警→子设备
+    - generic [ref=e54]:
+      - heading "属性编辑" [level=3] [ref=e55]
+      - generic [ref=e56]:
+        - generic [ref=e57]: ◈
+        - paragraph [ref=e58]:
+          - text: 点击画布中的节点或边
+          - text: 查看/编辑属性
+  - generic [ref=e59]:
+    - generic [ref=e60]:
+      - generic [ref=e61]: NebulaGraph INSERT 语句
+      - generic [ref=e62]:
+        - button "复制" [ref=e63] [cursor=pointer]
+        - button "清空" [ref=e64] [cursor=pointer]
+    - generic [ref=e65]: "-- 在画布中创建拓扑图后，点击\"生成 SQL\"按钮查看 INSERT 语句"
